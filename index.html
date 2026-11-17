@@ -628,12 +628,12 @@ const OpenFilms = {
   },
   ids(kind){ return Object.keys(this.films).filter(id => !kind || this.films[id].kind === kind) }
 };
-// VidLink embeds use TMDB IDs. Player state is saved locally, separately from
-// VidLink's own `vidLinkProgress` data so neither store overwrites the other.
-const VIDLINK_ORIGIN = "https://vidlink.pro";
-const VIDLINK_PROGRESS_KEY = "stormreel:vidlink-progress";
-const VidLinkProgress = {
-  all(){ try { return JSON.parse(localStorage.getItem(VIDLINK_PROGRESS_KEY) || "{}") || {} } catch { return {} } },
+// VidSrc embeds accept numeric TMDB IDs; playback events use a different
+// payload from VidLink. Keep existing local progress in its own store.
+const VIDSRC_ORIGIN = "https://vidsrc.sh";
+const VIDSRC_PROGRESS_KEY = "stormreel:vidsrc-progress";
+const VidSrcProgress = {
+  all(){ try { return JSON.parse(localStorage.getItem(VIDSRC_PROGRESS_KEY) || "{}") || {} } catch { return {} } },
   get(id, season = 1, episode = 1){
     const item = this.all()[String(id)];
     return item?.type === "tv" ? item?.episodes?.[`${season}:${episode}`] || null : item?.progress || null;
@@ -652,33 +652,34 @@ const VidLinkProgress = {
       item.lastSeason = season; item.lastEpisode = episode;
     } else item.progress = progress;
     all[key] = item;
-    try { localStorage.setItem(VIDLINK_PROGRESS_KEY, JSON.stringify(all)) } catch {}
+    try { localStorage.setItem(VIDSRC_PROGRESS_KEY, JSON.stringify(all)) } catch {}
   }
 };
-function listenToVidLink(iframe, expected){
+function listenToVidSrc(iframe, expected){
   const listener = event => {
-    if (event.origin !== VIDLINK_ORIGIN || event.source !== iframe.contentWindow) return;
+    if (event.origin !== VIDSRC_ORIGIN || event.source !== iframe.contentWindow) return;
     const payload = event.data;
-    if (!payload || typeof payload !== "object") return;
-    if (payload.type === "PLAYER_EVENT" && payload.data && typeof payload.data === "object") {
-      const d = payload.data;
-      if (!["play","pause","seeked","ended","timeupdate"].includes(d.event)) return;
-      if (Number(d.tmdbId) !== Number(expected.tmdbId) || d.mediaType !== expected.mediaType) return;
-      if (expected.mediaType === "tv" && (Number(d.season) !== Number(expected.season) || Number(d.episode) !== Number(expected.episode))) return;
-      VidLinkProgress.save(d);
-      iframe.dataset.playbackStatus = d.event;
-    }
-    // VidLink's MEDIA_DATA message includes its own localStorage structure.
-    // Keep it under the provider's documented key, without trusting unrelated frames.
-    if (payload.type === "MEDIA_DATA" && payload.data && typeof payload.data === "object" && !Array.isArray(payload.data)) {
-      try { localStorage.setItem("vidLinkProgress", JSON.stringify(payload.data)) } catch {}
-    }
+    if (!payload || typeof payload !== "object" || payload.type !== "PLAYER_EVENT") return;
+    const d = payload.data, info = d?.player_info;
+    if (!d || !info || !["playing", "paused", "seeked", "completed"].includes(d.player_status)) return;
+    if (Number(info.tmdb) !== Number(expected.tmdbId) || info.mediaType !== expected.mediaType) return;
+    if (expected.mediaType === "tv" && (Number(info.season) !== Number(expected.season) || Number(info.episode) !== Number(expected.episode))) return;
+    if (d.player_status === "completed") {
+      // Completed content should restart from the beginning on the next visit.
+      const all = VidSrcProgress.all(), item = all[String(expected.tmdbId)];
+      if (item) {
+        if (expected.mediaType === "tv") delete item.episodes?.[`${expected.season}:${expected.episode}`];
+        else delete item.progress;
+        try { localStorage.setItem(VIDSRC_PROGRESS_KEY, JSON.stringify(all)) } catch {}
+      }
+    } else VidSrcProgress.save({tmdbId:info.tmdb, mediaType:info.mediaType, season:info.season, episode:info.episode, currentTime:d.player_progress, duration:d.player_duration});
+    iframe.dataset.playbackStatus = d.player_status;
   };
   window.addEventListener("message", listener);
   return () => window.removeEventListener("message", listener);
 }
 const Streams = {
-  name: "vidlink",
+  name: "vidsrc",
   find(titleOrId, season = 1, episode = 1){
     const title = titleOrId && typeof titleOrId === "object" ? titleOrId : null;
     const rawId = String(title ? title.id || "" : titleOrId || "");
@@ -695,15 +696,13 @@ const Streams = {
     if (!/^\d+$/.test(String(tmdbId || "")) || !["movie","tv"].includes(mediaType)) return null;
     season = Math.max(0, Number(season) || 1); episode = Math.max(1, Number(episode) || 1);
     const path = mediaType === "movie" ? `movie/${tmdbId}` : `tv/${tmdbId}/${season}/${episode}`;
-    const url = new URL(`https://vidlink.pro/${path}`);
-    url.searchParams.set("title", "false");
-    url.searchParams.set("autoplay", "false");
-    url.searchParams.set("nextbutton", "true");
-    // Resume from locally captured playback events when available.
-    const previous = VidLinkProgress.get(tmdbId, season, episode);
+    const url = new URL(`https://vidsrc.sh/embed/${path}`);
+    url.searchParams.set("autoplay", "0");
+    if (mediaType === "tv") url.searchParams.set("autonext", "1");
+    const previous = VidSrcProgress.get(tmdbId, season, episode);
     if (previous?.watched > 10 && previous.watched < previous.duration - 20)
       url.searchParams.set("startAt", String(Math.floor(previous.watched)));
-    return {embed:url.toString(), from:"VidLink", tmdbId, mediaType, season, episode};
+    return {embed:url.toString(), from:"VidSrc", tmdbId, mediaType, season, episode};
   }
 };
 
@@ -1666,25 +1665,25 @@ function theater(t, season = 1, episode = 1){
   const el = document.createElement("section");
   el.className = "inline-player sec";
   el.setAttribute("aria-label", "Now playing: " + t.title);
-  el.innerHTML = `<div class="sec-h"><div><div class="kicker" style="margin:0 0 4px">Now playing · VidLink</div><h2>${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</h2></div><button class="btn small" id="thClose">Close ✕</button></div>
+  el.innerHTML = `<div class="sec-h"><div><div class="kicker" style="margin:0 0 4px">Now playing · VidSrc</div><h2>${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</h2></div><button class="btn small" id="thClose">Close ✕</button></div>
     <div class="th-frame" id="PlayerContainer"></div>
-    <div class="th-foot muted">Video provided by VidLink.</div>`;
+    <div class="th-foot muted">Video provided by VidSrc.</div>`;
   const player = el.querySelector("#PlayerContainer");
   const stream = Streams.find(t, season, episode);
   if (!stream) {
-    player.innerHTML = `<div class="panel" style="height:100%;display:grid;place-items:center;text-align:center;padding:24px"><p>This title does not have a numeric TMDB ID. VidLink embeds require a TMDB movie or series ID.</p></div>`;
+    player.innerHTML = `<div class="panel" style="height:100%;display:grid;place-items:center;text-align:center;padding:24px"><p>This title does not have a numeric TMDB ID. VidSrc embeds require a TMDB movie or series ID.</p></div>`;
   } else {
     const iframe = document.createElement("iframe");
-    iframe.id = "vidlink-player";
+    iframe.id = "vidsrc-player";
     iframe.src = stream.embed;
-    iframe.title = `${t.title} · VidLink player`;
+    iframe.title = `${t.title} · VidSrc player`;
     iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
     iframe.allowFullscreen = true;
     player.appendChild(iframe);
   }
   feature.insertAdjacentElement("afterend", el);
-  const stopListening = stream ? listenToVidLink(el.querySelector("#vidlink-player"), stream) : () => {};
+  const stopListening = stream ? listenToVidSrc(el.querySelector("#vidsrc-player"), stream) : () => {};
   closeTheater = () => {
     el.remove();
     stopListening();
@@ -2250,13 +2249,13 @@ function watchSpot(t){
   play.addEventListener("click", e => { if (spot() === "room") { e.stopImmediatePropagation(); location.hash = "#/room/" + encodeURIComponent(t.id) } }, true);
 }
 
-// The Rain Room uses the same VidLink TMDB player as the title page.
+// The Rain Room uses the same VidSrc TMDB player as the title page.
 async function roomSource(id){
   const stream = Streams.find(id);
   const prov = Providers.for(id);
   let t = null; try { t = prov?.ready() ? await prov.details(id) : null } catch {}
   return stream
-    ? { embed: stream.embed, kind: "VidLink", title: t?.title || "", tmdbId: stream.tmdbId, mediaType: stream.mediaType, season: stream.season, episode: stream.episode }
+    ? { embed: stream.embed, kind: "VidSrc", title: t?.title || "", tmdbId: stream.tmdbId, mediaType: stream.mediaType, season: stream.season, episode: stream.episode }
     : { none: true, title: t?.title || "" };
 }
 
@@ -2598,13 +2597,13 @@ const Room = {
     if (src.none) { $("#rmKind").textContent = "No signal"; this.osd(src.title || "No signal", "A TMDB ID is required for VidLink"); return }
     $("#rmKind").textContent = "Now playing · " + src.kind;
     const f = document.createElement("iframe");
-    f.id = "room-vidlink-player";
-    f.src = src.embed; f.title = (src.title || "Video") + " · VidLink player on the room TV";
+    f.id = "room-vidsrc-player";
+    f.src = src.embed; f.title = (src.title || "Video") + " · VidSrc player on the room TV";
     f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
-    // VidLink embeds work directly; no Stellar initialization handshake is required.
+    // VidSrc embeds work directly; no Stellar initialization handshake is required.
     f.addEventListener("load", () => { if (playRequest !== this.playRequest) return; this.staticOn = false; this.playing = true; this.osd("", "") });
     this.screen.insertBefore(f, this.screen.querySelector(".crt"));
-    this.playerMessageCleanup = listenToVidLink(f, src);
+    this.playerMessageCleanup = listenToVidSrc(f, src);
   },
   osd(a, b){ const o = this.screen.querySelector(".tv-osd"); o.hidden = !a; o.innerHTML = a ? `<b>${esc(a)}</b><span>${esc(b)}</span>` : "" },
 
