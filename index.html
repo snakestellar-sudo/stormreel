@@ -104,7 +104,11 @@ header,main,footer{position:relative;z-index:1}
 header{position:sticky;top:0;z-index:30;border-bottom:1px solid var(--line);
   background:color-mix(in srgb,var(--sky-1) 70%,transparent);backdrop-filter:blur(14px) saturate(1.3);-webkit-backdrop-filter:blur(14px) saturate(1.3);
   box-shadow:0 1px 0 rgba(var(--glow-rgb),calc(var(--flash)*.6))}
-.bar{max-width:1240px;margin:0 auto;padding:10px 16px;display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"logo nav tools";gap:10px 18px;align-items:center}
+/* two rows at every width: logo + tools on top, the nav on its own row, so nothing overlaps */
+.bar{max-width:1240px;margin:0 auto;padding:10px 16px 6px;display:grid;grid-template-columns:auto 1fr;grid-template-areas:"logo tools" "nav nav";gap:8px 18px;align-items:center}
+.tools{justify-content:flex-end;min-width:0}
+.search{flex:0 1 300px;min-width:150px}
+.search input{width:100%}
 .logo{grid-area:logo;display:flex;align-items:center;gap:9px;text-decoration:none;background:none;border:0;padding:0}
 .logo svg{width:30px;height:30px;color:var(--accent);filter:drop-shadow(0 0 calc(4px + var(--flash)*16px) rgba(var(--glow-rgb),.7));transition:transform .3s}
 .logo:hover svg{transform:rotate(-12deg) scale(1.08)}
@@ -117,16 +121,13 @@ nav a:hover{color:var(--text)}
 nav a.on{color:var(--text);background:var(--surface-2);box-shadow:inset 0 -2px 0 var(--accent)}
 .tools{grid-area:tools;display:flex;gap:8px;align-items:center}
 .search{display:flex;position:relative}
-.search input{width:220px;padding:8px 12px 8px 34px;border-radius:9px;border:1px solid var(--line);background:var(--surface)}
+.search input{width:100%;padding:8px 12px 8px 34px;border-radius:9px;border:1px solid var(--line);background:var(--surface)}
 .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
 body[data-route="/"] .search{display:none}
 .who{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
 .wx{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:700;color:var(--muted)}
 .wx svg{width:16px;height:16px;color:var(--accent)}
 .wx:hover{color:var(--text)}
-@media (max-width:1100px){
-  .bar{grid-template-columns:1fr auto;grid-template-areas:"logo tools" "nav nav"}
-}
 @media (max-width:640px){
   .search{display:none}
   .wx span{display:none}
@@ -198,13 +199,67 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14p
 .meta{display:flex;gap:8px;flex-wrap:wrap;color:var(--muted);font-size:14px;font-weight:600}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
 .chip{font-size:12px;font-weight:600;border:1px solid var(--line);padding:3px 10px;border-radius:20px;color:var(--muted);background:var(--surface-2)}
-.bolts{display:flex;gap:2px}
-.bolts button{background:none;border:0;padding:3px;line-height:0}
-.bolts svg{width:30px;height:30px;fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linejoin:round;transition:transform .15s,fill .15s}
-.bolts button:hover svg{transform:scale(1.15)}
-.bolts button.lit svg{fill:var(--accent);stroke:var(--accent);filter:drop-shadow(0 0 6px rgba(var(--glow-rgb),.7))}
-.mini svg{width:14px;height:14px;fill:var(--accent);vertical-align:-2px}
-.mini svg.off{fill:none;stroke:var(--muted);stroke-width:1.5}
+/* bolts: outline + a filled copy clipped to the earned fraction (so 4.2 shows a sliver of the fifth) */
+.bolt{position:relative;display:inline-block;line-height:0}
+.bolt svg{fill:none;stroke:var(--muted);stroke-width:1.5;stroke-linejoin:round}
+.bfill{position:absolute;left:0;top:0;bottom:0;overflow:hidden;pointer-events:none}
+.bfill svg{fill:var(--accent);stroke:var(--accent)}
+.rate{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.bolts{display:flex;gap:4px;cursor:pointer;border-radius:8px;padding:2px}
+.bolts .bolt svg{width:32px;height:32px;transition:transform .15s}
+.bolts .bolt:hover svg{transform:scale(1.1)}
+.bolts .bfill svg{filter:drop-shadow(0 0 6px rgba(var(--glow-rgb),.7))}
+.score{display:inline-flex;align-items:center;gap:6px;margin:0;color:var(--muted);font-weight:700}
+.score input{width:64px;padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);font-weight:800;font-size:16px;text-align:center}
+.score input::-webkit-inner-spin-button{opacity:.5}
+.rate-hint{font-size:12px;color:var(--muted);margin-top:4px}
+.mini{display:inline-flex;align-items:center;gap:1px;vertical-align:-2px;white-space:nowrap}
+.mini .bolt svg{width:13px;height:13px}
+.mini b{margin-left:4px;font-size:12px;color:var(--text)}
+
+/* search suggestions */
+.suggest{position:absolute;top:calc(100% + 6px);left:0;width:max(100%,380px);max-width:calc(100vw - 32px);z-index:70;padding:6px;border-radius:12px;
+  background:var(--surface);border:1px solid var(--line);backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);box-shadow:0 24px 60px -18px rgba(0,0,0,.75)}
+.search .suggest{left:auto;right:0}
+.sg-item{display:flex;gap:10px;align-items:center;padding:6px 8px;border-radius:8px;text-decoration:none}
+.sg-item img,.sg-ph{width:34px;height:51px;border-radius:5px;object-fit:cover;background:var(--surface-2);flex:0 0 auto;display:inline-block}
+.sg-item:hover,.sg-item.on{background:var(--surface-2);box-shadow:inset 3px 0 0 var(--accent)}
+.sg-txt{display:flex;flex-direction:column;min-width:0}
+.sg-txt b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sg-txt mark{background:none;color:var(--accent)}
+.sg-txt small{font-size:12px;color:var(--muted)}
+.sg-all{display:block;width:100%;margin-top:4px;padding:9px;border:0;border-top:1px solid var(--line);background:none;color:var(--accent);font-weight:700;font-size:13px;text-align:left;border-radius:0 0 8px 8px}
+.sg-all:hover{background:var(--surface-2)}
+
+/* friends */
+.av{--h:200;display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;flex:0 0 auto;font:800 13px/1 Manrope,sans-serif;
+  color:#fff;background:linear-gradient(135deg,hsl(var(--h) 70% 55%),hsl(calc(var(--h) + 50) 70% 40%));box-shadow:0 0 0 2px var(--surface)}
+.av.big{width:52px;height:52px;font-size:24px}
+.fhead h2{display:flex;align-items:center;gap:10px;font-size:22px}
+.fhead h2 a{text-decoration:none}
+.fwhat{color:var(--muted);font-family:Manrope,sans-serif;font-size:14px;font-weight:600;text-transform:none;letter-spacing:0}
+.fhead-big{display:flex;gap:14px;align-items:center;margin:4px 0 18px}
+.fnote{margin:4px 0 0}
+.both{color:var(--accent);font-weight:700}
+.fcard .who{position:absolute;left:6px;bottom:6px;display:flex;align-items:center;gap:5px;padding:3px 8px 3px 3px;border-radius:20px;background:rgba(3,6,12,.78);color:#fff;font-size:11px;font-weight:700;z-index:4}
+.fcard .who .av{width:20px;height:20px;font-size:10px;box-shadow:none}
+.fdiaries{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.fdiary{display:flex;flex-direction:column}
+.fdiary .fhead{margin-bottom:8px}
+.fdiary .fhead small{display:block;width:100%}
+.flist{display:flex;flex-direction:column}
+.fentry{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);text-decoration:none}
+.fentry:first-child{border-top:0}
+.fentry img,.fentry .sg-ph{width:32px;height:48px}
+.fe-txt{display:flex;flex-direction:column;min-width:0;font-size:14px}
+.fe-txt small{color:var(--muted);font-size:12px;margin-top:1px}
+.fe-txt q{font-size:13px;color:var(--text);opacity:.85;margin-top:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fmore{margin-top:auto;padding-top:10px;font-size:13px;font-weight:700;color:var(--accent);text-decoration:none}
+.fcolls{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.fcoll{display:flex;flex-direction:column;gap:4px;text-decoration:none;padding:14px}
+.fcoll:hover{border-color:rgba(var(--glow-rgb),.6)}
+.pstack{position:relative;height:96px;margin-bottom:8px}
+.pstack img,.pstack .sg-ph{position:absolute;top:0;left:calc(var(--k,0) * 30px);width:64px;height:96px;border-radius:6px;object-fit:cover;border:2px solid var(--surface);transform:rotate(calc((var(--k,0) - 1) * 5deg));box-shadow:0 8px 18px -8px rgba(0,0,0,.7)}
 .video{aspect-ratio:16/9;width:100%;border:0;border-radius:12px;background:#000}
 .review{border-top:1px solid var(--line);padding:14px 0}
 .review:first-child{border-top:0;padding-top:0}
@@ -280,7 +335,7 @@ html.glitch h1,html.glitch h2,html.glitch .word{text-shadow:-2px 0 rgba(255,0,90
 .wxopt.on b{color:var(--accent)}
 .wxmenu-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:14px;padding-top:12px;font-size:13px;color:var(--muted)}
 .wxmenu-foot a{color:var(--accent)}
-@media (max-width:640px){.wxmenu{position:fixed;top:64px;left:16px;right:16px;width:auto}}
+@media (max-width:640px){.wxmenu{position:fixed;top:108px;left:16px;right:16px;width:auto}}
 :root[data-weather="blizzard"] .bigsearch input::placeholder{color:rgba(var(--snow-rgb),.75)}
 
 /* ============ GENRES ============ */
@@ -362,7 +417,7 @@ body[data-route="/room"]{overflow:hidden}
 .theme-card.on{outline:2px solid var(--accent)}
 
 /* ============ TOAST + FOOTER ============ */
-.toast{position:fixed;top:76px;left:50%;transform:translate(-50%,-10px);display:flex;gap:8px;align-items:center;background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:99;box-shadow:0 10px 40px -10px rgba(var(--glow-rgb),.9);max-width:calc(100vw - 32px)}
+.toast{position:fixed;top:118px;left:50%;transform:translate(-50%,-10px);display:flex;gap:8px;align-items:center;background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:10px;font-weight:700;font-size:14px;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:99;box-shadow:0 10px 40px -10px rgba(var(--glow-rgb),.9);max-width:calc(100vw - 32px)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast svg{width:16px;height:16px;fill:currentColor;flex:0 0 auto}
 footer{border-top:1px solid var(--line);padding:26px 16px 34px;color:var(--muted);font-size:12px;text-align:center;background:color-mix(in srgb,var(--sky-3) 70%,transparent)}
@@ -449,7 +504,7 @@ const TMDBProvider = {
       title: r.title || r.name || "Untitled", year: date.slice(0, 4), overview: r.overview || "",
       poster: r.poster_path ? this.img + "w342" + r.poster_path : "",
       backdrop: r.backdrop_path ? this.img + "w1280" + r.backdrop_path : "",
-      score: r.vote_average ? Math.round(r.vote_average * 10) / 10 : null,
+      score: r.vote_average ? Math.round(r.vote_average * 10) / 10 : null, pop: r.popularity || 0,
       genres: (r.genres || []).map(g => g.name),
       runtime: r.runtime || (r.episode_run_time || [])[0] || null,
       link: `https://www.themoviedb.org/${type}/${r.id}`
@@ -496,7 +551,7 @@ const TVmazeProvider = {
     return {
       id: `tvmaze:tv:${s.id}`, provider: "tvmaze", type: "tv", title: s.name, year: (s.premiered || "").slice(0, 4),
       overview: this.strip(s.summary), poster: s.image?.medium || "", backdrop: s.image?.original || "",
-      score: s.rating?.average ?? null, genres: s.genres || [], runtime: s.averageRuntime || s.runtime || null, link: s.url
+      score: s.rating?.average ?? null, pop: s.weight || 0, genres: s.genres || [], runtime: s.averageRuntime || s.runtime || null, link: s.url
     };
   },
   async trending(){
@@ -574,7 +629,7 @@ const OpenFilms = {
   ids(kind){ return Object.keys(this.films).filter(id => !kind || this.films[id].kind === kind) }
 };
 const Streams = {
-  name: "stellar",
+  name: "videasy",
   language(){
     const locale = String(navigator.language || "en").toLowerCase();
     if (locale === "zh-tw" || locale.startsWith("zh-hant")) return "zh-TW";
@@ -600,11 +655,10 @@ const Streams = {
       mediaType = String(title.type).toLowerCase(); tmdbId = rawId;
     }
     if (!/^\d+$/.test(String(tmdbId || "")) || !["movie","tv"].includes(mediaType)) return null;
-    const lang = this.language();
     const url = mediaType === "movie"
-      ? `https://stellar.rip/${lang}/watch/embed/movie/${tmdbId}`
-      : `https://stellar.rip/${lang}/watch/embed/tv/${tmdbId}-${Math.max(0, Number(season) || 1)}-${Math.max(1, Number(episode) || 1)}`;
-    return { embed: url, from: "Stellar", tmdbId, mediaType, season, episode };
+      ? `https://videasy.xyz/embed/movie/${tmdbId}`
+      : `https://videasy.xyz/embed/tv/${tmdbId}/${Math.max(0, Number(season) || 1)}/${Math.max(1, Number(episode) || 1)}`;
+    return { embed: url, from: "Videasy", tmdbId, mediaType, season, episode };
   }
 };
 
@@ -694,6 +748,14 @@ const LocalStore = {
     const f = this.d.users[name]; if (!f || !this.me().friends.includes(name)) return null;
     return { username: f.username, mutual: true, ratings: f.ratings, reviews: f.reviews, history: f.history, titles: f.titles };
   },
+  // Everything friends share with you, in one go (only people who have added you back).
+  async friendData(){
+    const me = this.me(), blank = { history: [], ratings: {}, reviews: {}, watchlist: [], collections: {}, titles: {} };
+    return me.friends.map(n => this.d.users[n]).filter(Boolean).map(f => {
+      const mutual = f.friends.includes(me.username);
+      return mutual ? { username: f.username, mutual, history: f.history, ratings: f.ratings, reviews: f.reviews, watchlist: f.watchlist, collections: f.collections, titles: f.titles } : { username: f.username, mutual, ...structuredClone(blank) };
+    });
+  },
   async friendsOnTitle(id){
     return this.me().friends.map(n => this.d.users[n]).filter(f => f && (f.ratings[id] || f.reviews[id]))
       .map(f => ({ username: f.username, stars: f.ratings[id]?.stars || 0, text: f.reviews[id]?.text || "" }));
@@ -728,7 +790,7 @@ const CloudStore = {
     if (!p.data) throw new Error("Your profile is missing. Was the database schema installed?");
     const m = { username: p.data.username, email: user.email, theme: p.data.theme, ratings: {}, reviews: {}, history: [], watchlist: [], collections: {}, friends: [], titles: {}, _coll: {}, _fid: {} };
     const keep = (id, t) => { if (t && t.title) m.titles[id] = t };
-    for (const x of r.data) { m.ratings[x.title_id] = { stars: x.stars, at: Date.parse(x.updated_at) }; keep(x.title_id, x.title) }
+    for (const x of r.data) { m.ratings[x.title_id] = { stars: Number(x.stars), at: Date.parse(x.updated_at) }; keep(x.title_id, x.title) }
     for (const x of v.data) { m.reviews[x.title_id] = { text: x.body, at: Date.parse(x.updated_at) }; keep(x.title_id, x.title) }
     for (const x of w.data) { m.watchlist.push(x.title_id); keep(x.title_id, x.title) }
     for (const x of h.data) { m.history.push({ id: x.title_id, at: Date.parse(x.watched_at), hid: x.id }); keep(x.title_id, x.title) }
@@ -844,10 +906,33 @@ const CloudStore = {
       sb.from("history").select("*").eq("user_id", id).order("watched_at", { ascending: false }).limit(60)
     ]);
     const o = { username: name, mutual: !!back.data, ratings: {}, reviews: {}, history: [], titles: {} };
-    for (const x of r.data || []) { o.ratings[x.title_id] = { stars: x.stars, at: Date.parse(x.updated_at) }; o.titles[x.title_id] = x.title }
+    for (const x of r.data || []) { o.ratings[x.title_id] = { stars: Number(x.stars), at: Date.parse(x.updated_at) }; o.titles[x.title_id] = x.title }
     for (const x of v.data || []) { o.reviews[x.title_id] = { text: x.body }; o.titles[x.title_id] = x.title }
     for (const x of h.data || []) { o.history.push({ id: x.title_id, at: Date.parse(x.watched_at) }); o.titles[x.title_id] = x.title }
     return o;
+  },
+  // Everything friends share with you, in one batch of queries. Row-level security only returns
+  // rows from friends who have added you, so `mutual` tells the UI whether to expect anything.
+  async friendData(){
+    const fid = this.mine._fid, ids = Object.values(fid); if (!ids.length) return [];
+    const sb = this.sb, byId = Object.fromEntries(Object.entries(fid).map(([n, i]) => [i, n]));
+    const [back, h, r, v, w, c] = await Promise.all([
+      sb.from("friends").select("user_id").in("user_id", ids).eq("friend_id", this.uid),
+      sb.from("history").select("user_id,title_id,title,watched_at").in("user_id", ids).order("watched_at", { ascending: false }).limit(400),
+      sb.from("ratings").select("user_id,title_id,title,stars,updated_at").in("user_id", ids),
+      sb.from("reviews").select("user_id,title_id,title,body,updated_at").in("user_id", ids),
+      sb.from("watchlist").select("user_id,title_id,title,added_at").in("user_id", ids).order("added_at", { ascending: false }),
+      sb.from("collections").select("user_id,name,created_at,collection_items(title_id,title,added_at)").in("user_id", ids).order("created_at")
+    ]);
+    const out = Object.fromEntries(Object.keys(fid).map(n => [n, { username: n, mutual: false, history: [], ratings: {}, reviews: {}, watchlist: [], collections: {}, titles: {} }]));
+    const F = id => out[byId[id]], keep = (o, id, t) => { if (t && t.title) o.titles[id] = t };
+    for (const x of back.data || []) { const o = F(x.user_id); if (o) o.mutual = true }
+    for (const x of h.data || []) { const o = F(x.user_id); if (!o) continue; o.history.push({ id: x.title_id, at: Date.parse(x.watched_at) }); keep(o, x.title_id, x.title) }
+    for (const x of r.data || []) { const o = F(x.user_id); if (!o) continue; o.ratings[x.title_id] = { stars: Number(x.stars), at: Date.parse(x.updated_at) }; keep(o, x.title_id, x.title) }
+    for (const x of v.data || []) { const o = F(x.user_id); if (!o) continue; o.reviews[x.title_id] = { text: x.body, at: Date.parse(x.updated_at) }; keep(o, x.title_id, x.title) }
+    for (const x of w.data || []) { const o = F(x.user_id); if (!o) continue; o.watchlist.push(x.title_id); keep(o, x.title_id, x.title) }
+    for (const x of c.data || []) { const o = F(x.user_id); if (!o) continue; o.collections[x.name] = (x.collection_items || []).sort((a, b) => Date.parse(b.added_at) - Date.parse(a.added_at)).map(i => (keep(o, i.title_id, i.title), i.title_id)) }
+    return Object.values(out);
   },
   async friendsOnTitle(titleId){
     const ids = Object.values(this.mine._fid); if (!ids.length) return [];
@@ -856,7 +941,7 @@ const CloudStore = {
       this.sb.from("reviews").select("user_id,body").eq("title_id", titleId).in("user_id", ids)
     ]);
     const byId = Object.fromEntries(Object.entries(this.mine._fid).map(([n, i]) => [i, n])), out = {};
-    for (const x of r.data || []) (out[x.user_id] ||= { username: byId[x.user_id], stars: 0, text: "" }).stars = x.stars;
+    for (const x of r.data || []) (out[x.user_id] ||= { username: byId[x.user_id], stars: 0, text: "" }).stars = Number(x.stars);
     for (const x of v.data || []) (out[x.user_id] ||= { username: byId[x.user_id], stars: 0, text: "" }).text = x.body;
     return Object.values(out);
   },
@@ -1511,7 +1596,12 @@ const grid = (list, e = empty("Clear skies", "Nothing here yet.")) => (list = li
 const rail = (list, ranked) => `<div class="rail">${list.filter(Boolean).map((t, i) => card(t, ranked && i < 10 ? i + 1 : 0)).join("")}</div>`;
 const skelGrid = n => `<div class="grid">${Array.from({ length: n }, () => `<div class="poster skel"></div>`).join("")}</div>`;
 const skelRail = () => `<div class="rail">${Array.from({ length: 8 }, () => `<div class="card"><div class="poster skel"></div></div>`).join("")}</div>`;
-const miniBolts = n => `<span class="mini">${[1, 2, 3, 4, 5].map(i => BOLT.replace("<svg", `<svg class="${i <= n ? "" : "off"}"`)).join("")}</span>`;
+/* ---------- bolts: partial fills for ratings like 3.5 or 4.2 ---------- */
+const fmtScore = v => String(Math.round(v * 10) / 10);   // 4 -> "4", 4.2 -> "4.2"
+const boltFill = (v, i) => Math.max(0, Math.min(1, v - (i - 1)));
+// one bolt = an outline with a filled copy clipped to the fraction that's earned
+const boltsHTML = v => [1, 2, 3, 4, 5].map(i => `<span class="bolt" data-i="${i}">${BOLT}<span class="bfill" style="width:${boltFill(v, i) * 100}%">${BOLT}</span></span>`).join("");
+const miniBolts = n => n ? `<span class="mini" title="${fmtScore(n)} / 5">${boltsHTML(n)}<b>${fmtScore(n)}</b></span>` : "";
 // "Where to watch": TMDB's streaming/rent/buy data for the visitor's country (supplied by JustWatch).
 function whereToWatch(t, stream){
   if (t.provider !== "tmdb" || t.type !== "movie" && t.type !== "tv") return "";
@@ -1531,45 +1621,34 @@ function theater(t, season = 1, episode = 1){
   const el = document.createElement("section");
   el.className = "inline-player sec";
   el.setAttribute("aria-label", "Now playing: " + t.title);
-  el.innerHTML = `<div class="sec-h"><div><div class="kicker" style="margin:0 0 4px">Now playing · Stellar</div><h2>${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</h2></div><button class="btn small" id="thClose">Close ✕</button></div>
+  el.innerHTML = `<div class="sec-h"><div><div class="kicker" style="margin:0 0 4px">Now playing · Videasy</div><h2>${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</h2></div><button class="btn small" id="thClose">Close ✕</button></div>
     <div class="th-frame" id="PlayerContainer"></div>
-    <div class="th-foot muted">Video provided by Stellar.</div>`;
+    <div class="th-foot muted">Video provided by Videasy.</div>`;
   const player = el.querySelector("#PlayerContainer");
   const stream = Streams.find(t, season, episode);
   if (!stream) {
-    player.innerHTML = `<div class="panel" style="height:100%;display:grid;place-items:center;text-align:center;padding:24px"><p>This title does not have a numeric TMDB ID. Stellar embeds require a TMDB movie or series ID.</p></div>`;
+    player.innerHTML = `<div class="panel" style="height:100%;display:grid;place-items:center;text-align:center;padding:24px"><p>This title does not have a numeric TMDB ID. Videasy embeds require a TMDB movie or series ID.</p></div>`;
   } else {
     const iframe = document.createElement("iframe");
-    iframe.id = "stellar-player";
+    iframe.id = "videasy-player";
     iframe.src = stream.embed;
-    iframe.title = `${t.title} · Stellar player`;
+    iframe.title = `${t.title} · Videasy player`;
     iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
     iframe.allowFullscreen = true;
     player.appendChild(iframe);
   }
   feature.insertAdjacentElement("afterend", el);
-  const playerOrigin = "https://stellar.rip";
-  const getPlayerFrame = () => el.querySelector("#stellar-player");
-  const initializePlayerMessages = () => {
-    const frame = getPlayerFrame();
-    frame?.contentWindow?.postMessage({ type: "STELLAR_EMBED_INIT" }, playerOrigin);
-  };
+  const playerOrigin = "https://videasy.xyz";
+  const getPlayerFrame = () => el.querySelector("#videasy-player");
   const onPlayerMessage = event => {
     const frame = getPlayerFrame();
     if (event.origin !== playerOrigin || event.source !== frame?.contentWindow) return;
-    if (event.data?.type === "STELLAR_EMBED_READY") initializePlayerMessages();
-    if (event.data?.type === "PLAYER_EVENT") {
-      const payload = event.data.data || {};
-      if (["play","pause","seeked","ended","timeupdate"].includes(payload.event)) {
-        el.dataset.currentTime = String(Number(payload.currentTime) || 0);
-        el.dataset.duration = String(Number(payload.duration) || 0);
-      }
+    const type = event.data?.type;
+    if (type === "videasy:play" || type === "videasy:pause" || type === "videasy:ended") {
+      el.dataset.playbackStatus = type.slice(8);
     }
   };
-  const frame = getPlayerFrame();
-  frame?.addEventListener("load", initializePlayerMessages);
-  if (frame) initializePlayerMessages();
   window.addEventListener("message", onPlayerMessage);
   closeTheater = () => {
     el.remove();
@@ -1638,6 +1717,122 @@ function loadGenreArt(root){
 
 const needLogin = () => { app.innerHTML = `<div class="panel narrow"><h1>Take shelter</h1><p class="muted">Sign in to keep a watchlist, a diary and collections that follow you to any device.</p><a class="btn primary" href="#/login">Sign in or join</a></div>` };
 
+/* ---------- rating widget: click half a bolt, or type an exact score ---------- */
+function ratingWidget(t, mine){
+  return `<label style="margin-top:18px">Your rating</label>
+    <div class="rate">
+      <div class="bolts" id="bolts" role="slider" tabindex="0" aria-label="Your rating out of 5" aria-valuemin="0" aria-valuemax="5" aria-valuenow="${mine}">${boltsHTML(mine)}</div>
+      <label class="score" title="Exact score, e.g. 4.2"><input id="score" type="number" inputmode="decimal" min="0.5" max="5" step="0.1" value="${mine ? fmtScore(mine) : ""}" placeholder="–" aria-label="Exact score out of 5"><span>/ 5</span></label>
+      <button type="button" class="linkish" id="clearRate" ${mine ? "" : "hidden"}>Clear</button>
+    </div>
+    <div class="rate-hint">Click the left or right half of a bolt, or type an exact score like 4.2.</div>`;
+}
+function wireRating(t){
+  const id = t.id, bolts = $("#bolts"), score = $("#score");
+  let cur = Store.me()?.ratings[id]?.stars || 0;
+  const paint = v => bolts.querySelectorAll(".bfill").forEach((f, k) => f.style.width = boltFill(v, k + 1) * 100 + "%");
+  const sync = () => { cur = Store.me()?.ratings[id]?.stars || 0; paint(cur); bolts.setAttribute("aria-valuenow", cur); score.value = cur ? fmtScore(cur) : ""; $("#clearRate").hidden = !cur };
+  const valAt = e => { const b = e.target.closest(".bolt"); if (!b) return null; const r = b.getBoundingClientRect(); return +b.dataset.i - (e.clientX - r.left < r.width / 2 ? .5 : 0) };
+  const save = async (v, x) => {
+    v = v ? Math.round(Math.min(5, Math.max(.5, v)) * 10) / 10 : 0;
+    if (v === 5 && !Storm.hold) Storm.strike({ x: x ?? innerWidth / 2, big: true });
+    await act(() => Store.rate(t, v), v ? (v === 5 ? "Five bolts. Electric." : `Rated ${fmtScore(v)} / 5`) : "Rating cleared");
+    sync();   // update in place, so a playing video keeps playing
+  };
+  bolts.onmousemove = e => { const v = valAt(e); if (v) paint(v) };
+  bolts.onmouseleave = () => paint(cur);
+  bolts.onclick = e => { const v = valAt(e); if (v) save(v === cur ? 0 : v, e.clientX) };
+  bolts.onkeydown = e => { const d = { ArrowRight: .5, ArrowUp: .5, ArrowLeft: -.5, ArrowDown: -.5 }[e.key]; if (d) { e.preventDefault(); save(Math.max(0, cur + d)) } };
+  score.onchange = () => { const v = parseFloat(score.value); if (isNaN(v)) return sync(); save(v) };
+  score.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); score.blur() } };
+  $("#clearRate").onclick = () => save(0);
+}
+
+/* ---------- search suggestions while you type ---------- */
+function highlight(text, q){
+  const i = text.toLowerCase().indexOf(q.toLowerCase());
+  return i < 0 ? esc(text) : esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + q.length)) + "</mark>" + esc(text.slice(i + q.length));
+}
+function attachSuggest(input, form){
+  if (!input || !form || input.dataset.sg) return;
+  input.dataset.sg = "1"; input.autocomplete = "off";
+  input.setAttribute("role", "combobox"); input.setAttribute("aria-autocomplete", "list"); input.setAttribute("aria-expanded", "false");
+  const box = document.createElement("div"); box.className = "suggest"; box.hidden = true; box.setAttribute("role", "listbox");
+  form.appendChild(box);
+  let timer, seq = 0, items = [], ix = -1, lastQ = "";
+  const close = () => { box.hidden = true; ix = -1; input.setAttribute("aria-expanded", "false") };
+  const render = () => {
+    box.innerHTML = items.map((t, i) => `<a href="#/title/${encodeURIComponent(t.id)}" class="sg-item${i === ix ? " on" : ""}" role="option" aria-selected="${i === ix}">
+        ${t.poster ? `<img src="${esc(t.poster.replace("/w342/", "/w92/"))}" alt="" loading="lazy">` : `<span class="sg-ph"></span>`}
+        <span class="sg-txt"><b>${highlight(t.title, lastQ)}</b><small>${[t.year, t.type === "tv" ? "Series" : "Film", t.score ? t.score + " avg" : ""].filter(Boolean).join(" · ")}</small></span></a>`).join("")
+      + `<button type="submit" class="sg-all">See all results for “${esc(lastQ)}”</button>`;
+    box.hidden = false; input.setAttribute("aria-expanded", "true");
+  };
+  input.addEventListener("input", () => {
+    const q = input.value.trim(); clearTimeout(timer);
+    if (q.length < 2) { items = []; return close() }
+    timer = setTimeout(async () => {
+      const my = ++seq;
+      try {
+        const res = await Providers.active().search(q); if (my !== seq) return;
+        const lq = q.toLowerCase();
+        // closest match first, then the more popular title
+        items = res.filter(t => t.title).map(t => { const tl = t.title.toLowerCase(), m = tl === lq ? 5 : tl.startsWith(lq) ? 3.5 : tl.split(/[^a-z0-9]+/).some(w => w.startsWith(lq)) ? 2.2 : tl.includes(lq) ? 1.5 : 1; return { t, s: m * Math.log10(10 + (t.pop || 0)) } })
+          .sort((a, b) => b.s - a.s).slice(0, 7).map(x => x.t);
+        lastQ = q; ix = -1; items.length ? render() : close();
+      } catch { close() }
+    }, 200);
+  });
+  input.addEventListener("keydown", e => {
+    if (box.hidden || !items.length) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); ix = Math.max(-1, Math.min(items.length - 1, ix + (e.key === "ArrowDown" ? 1 : -1))); render() }
+    else if (e.key === "Enter" && ix >= 0) { e.preventDefault(); location.hash = "#/title/" + encodeURIComponent(items[ix].id); close(); input.blur() }
+    else if (e.key === "Escape") close();
+  });
+  input.addEventListener("focus", () => { if (items.length && input.value.trim() === lastQ) render() });
+  box.addEventListener("click", e => { if (e.target.closest(".sg-item")) { close(); input.blur() } });
+  form.addEventListener("submit", close);
+  form._closeSuggest = close;
+}
+document.addEventListener("pointerdown", e => document.querySelectorAll("form").forEach(f => { if (f._closeSuggest && !f.contains(e.target)) f._closeSuggest() }));
+
+/* ---------- friends: shared data, avatars, and the friend sections on each page ---------- */
+let friendCache = null;
+async function getFriends(){
+  const u = Store.me(); if (!u || !u.friends.length) return [];
+  const key = u.username + ":" + u.friends.join(",");
+  if (friendCache && friendCache.key === key && Date.now() - friendCache.at < 60000) return friendCache.data;
+  const data = await Store.friendData();
+  friendCache = { key, at: Date.now(), data }; return data;
+}
+const hueOf = s => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+const avatar = (n, big) => `<span class="av${big ? " big" : ""}" style="--h:${hueOf(n)}" aria-hidden="true">${esc(n[0].toUpperCase())}</span>`;
+const ago = ts => { const s = (Date.now() - ts) / 1000; return s < 3600 ? Math.max(1, s / 60 | 0) + "m ago" : s < 86400 ? (s / 3600 | 0) + "h ago" : s < 86400 * 30 ? (s / 86400 | 0) + "d ago" : day(ts) };
+const friendHead = (f, what, extra = "") => `<div class="sec-h fhead"><h2>${avatar(f.username)}<a href="#/user/${esc(f.username)}">@${esc(f.username)}</a><span class="fwhat">${what}</span></h2>${extra}</div>`;
+function fcard(t, who, line){
+  return `<a class="card fcard" href="#/title/${encodeURIComponent(t.id)}"><div class="poster">${posterImg(t)}${who ? `<span class="who">${avatar(who)}@${esc(who)}</span>` : ""}</div><div class="t">${esc(t.title)}</div><div class="m">${line || ""}</div></a>`;
+}
+// Fill a placeholder with friend sections, quietly skipping when there are no friends.
+async function friendSections(el, build){
+  if (!el || !Store.me()?.friends.length) return;
+  el.innerHTML = `<div class="sec"><div class="sec-h"><h2>Friends</h2></div>${skelRail()}</div>`;
+  try { const fr = await getFriends(); if (el.isConnected) el.innerHTML = build(fr) || "" } catch (e) { el.innerHTML = "" }
+}
+const notShared = f => `<p class="muted fnote">@${esc(f.username)} hasn't added you back yet, so their lists are private for now.</p>`;
+
+// Home: what friends have been watching lately, newest first.
+async function homeFriends(){
+  if (!Store.me()?.friends.length) return;
+  const anchor = $(".hero") || app.firstElementChild; if (!anchor) return;
+  const el = document.createElement("div"); anchor.insertAdjacentElement("afterend", el);
+  friendSections(el, fr => {
+    const feed = fr.filter(f => f.mutual).flatMap(f => f.history.slice(0, 12).map(h => ({ f, h, t: f.titles[h.id] }))).filter(x => x.t?.title).sort((a, b) => b.h.at - a.h.at).slice(0, 20);
+    if (!feed.length) return "";
+    return `<section class="sec"><div class="sec-h"><h2>Your friends are watching</h2><small><a href="#/diary">See their diaries →</a></small></div>
+      <div class="rail">${feed.map(({ f, h, t }) => fcard({ ...t, id: h.id }, f.username, `${ago(h.at)}${f.ratings[h.id] ? " · " + miniBolts(f.ratings[h.id].stars) : ""}`)).join("")}</div></section>`;
+  });
+}
+
 function chrome(path){
   const u = Store.me();
   document.body.dataset.route = path;
@@ -1666,6 +1861,8 @@ const Views = {
       <section class="sec" id="genres"><div class="sec-h"><h2>Browse by genre</h2><small>Pick a genre to explore</small></div>${genreTiles()}</section>
       ${SHELVES.map((s, i) => `<section class="sec shelf" data-i="${i}"><div class="sec-h"><h2>${esc(s.title)}</h2>${s.genre ? `<a class="muted" style="font-size:13px" href="#/genre/${s.genre}${s.type === "tv" ? "/tv" : ""}">See all →</a>` : s.sub ? `<small>${esc(s.sub)}</small>` : ""}</div><div class="shelf-body">${skelRail()}</div></section>`).join("")}` : ""}`;
     $("#heroSearch").onsubmit = e => { e.preventDefault(); const q = $("#hq").value.trim(); if (q) { Storm.strike(); location.hash = "#/search/" + encodeURIComponent(q) } };
+    attachSuggest($("#hq"), $("#heroSearch"));
+    homeFriends();
     const fill = async (sel, fn, r) => { const el = $(sel); if (!el) return; try { const list = await fn(); el.innerHTML = r ? rail(list, true) : grid(list.slice(0, 18)) } catch (e) { el.innerHTML = empty("Signal lost", esc(e.message)) } };
     if (p === TMDBProvider) {
       loadGenreArt(app);
@@ -1767,8 +1964,7 @@ const Views = {
                <button class="btn primary play" id="play"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>Play now</button>
              </div>
             ${u ? `
-              <label style="margin-top:18px">Your rating</label>
-              <div class="bolts" id="bolts">${[1, 2, 3, 4, 5].map(n => `<button data-n="${n}" class="${n <= mine ? "lit" : ""}" aria-label="${n} bolt${n > 1 ? "s" : ""}">${BOLT}</button>`).join("")}</div>
+              ${ratingWidget(t, mine)}
               <div class="row" style="margin-top:16px">
                 <button class="btn ${inWL ? "on" : ""}" id="wl">${inWL ? "On your watchlist" : "+ Watchlist"}</button>
                 <button class="btn" id="log">Log a watch${watched ? ` (${watched})` : ""}</button>
@@ -1797,17 +1993,18 @@ const Views = {
     });
     watchSpot(t);   // "This page / Rain Room" toggle
     if (!u) return;
-    $("#bolts").onclick = async e => {
-      const b = e.target.closest("button"); if (!b) return;
-      const n = +b.dataset.n, val = n === mine ? 0 : n;
-      if (val === 5) { const r = b.getBoundingClientRect(); Storm.strike({ x: r.left + r.width / 2, big: true }) }
-      await act(() => Store.rate(t, val), val ? (val === 5 ? "Five bolts. Electric." : `Rated ${val} bolt${val > 1 ? "s" : ""}`) : "Rating cleared");
-      Views.title(id);
+    // Everything below updates the page in place (no re-render), so a playing video keeps playing.
+    wireRating(t);
+    const syncButtons = () => {
+      const me = Store.me(), on = me.watchlist.includes(id), n = me.history.filter(h => h.id === id).length;
+      $("#wl").classList.toggle("on", on); $("#wl").textContent = on ? "On your watchlist" : "+ Watchlist";
+      $("#log").textContent = "Log a watch" + (n ? ` (${n})` : "");
+      const sel = $("#coll"); if (sel) sel.innerHTML = `<option value="">Add to collection…</option>` + Object.keys(me.collections).map(c => `<option value="${esc(c)}">${me.collections[c].includes(id) ? "✓ " : ""}${esc(c)}</option>`).join("");
     };
-    $("#wl").onclick = async () => { const added = await act(() => Store.toggleWatchlist(t)); if (added !== undefined) toast(added ? "On your watchlist" : "Off your watchlist"); Views.title(id) };
-    $("#log").onclick = async () => { await act(() => Store.logWatch(t), "Logged in your diary"); Views.title(id) };
-    $("#saveRev").onclick = async () => { await act(() => Store.review(t, $("#rev").value), "Review saved"); Views.title(id) };
-    $("#coll")?.addEventListener("change", async e => { if (e.target.value) { await act(() => Store.toggleInCollection(e.target.value, t), "Collection updated"); Views.title(id) } });
+    $("#wl").onclick = async () => { const added = await act(() => Store.toggleWatchlist(t)); if (added !== undefined) toast(added ? "On your watchlist" : "Off your watchlist"); syncButtons() };
+    $("#log").onclick = async () => { await act(() => Store.logWatch(t), "Logged in your diary"); syncButtons() };
+    $("#saveRev").onclick = async () => { await act(() => Store.review(t, $("#rev").value), "Review saved") };
+    $("#coll")?.addEventListener("change", async e => { if (e.target.value) { await act(() => Store.toggleInCollection(e.target.value, t), "Collection updated"); syncButtons() } });
     act(async () => {
       const fr = await Store.friendsOnTitle(id); if (!fr.length || !$("#fr")) return;
       $("#fr").innerHTML = `<section class="sec"><div class="sec-h"><h2>Friends' takes</h2></div><div class="panel">${fr.map(f => `<div class="review"><a href="#/user/${esc(f.username)}"><b>@${esc(f.username)}</b></a> ${f.stars ? miniBolts(f.stars) : ""}${f.text ? `<div style="margin-top:4px">${esc(f.text)}</div>` : ""}</div>`).join("")}</div></section>`;
@@ -1816,7 +2013,14 @@ const Views = {
 
   watchlist(){
     const u = Store.me(); if (!u) return needLogin();
-    app.innerHTML = `<h1>Watchlist</h1>${grid(u.watchlist.map(i => u.titles[i] || { id: i, title: "Untitled" }), empty("Clear skies", "Add titles with “+ Watchlist” on any title page."))}`;
+    app.innerHTML = `<h1>Watchlist</h1>${grid(u.watchlist.map(i => u.titles[i] || { id: i, title: "Untitled" }), empty("Clear skies", "Add titles with “+ Watchlist” on any title page."))}<div id="fwl"></div>`;
+    // friends' watchlists, one row each, with anything you both want to see called out
+    friendSections($("#fwl"), fr => fr.map(f => {
+      if (!f.mutual) return `<section class="sec">${friendHead(f, "watchlist")}${notShared(f)}</section>`;
+      const both = f.watchlist.filter(id => u.watchlist.includes(id)).length;
+      return `<section class="sec">${friendHead(f, "watchlist", `<small>${f.watchlist.length} title${f.watchlist.length === 1 ? "" : "s"}${both ? ` · <b class="both">${both} you both want to see</b>` : ""}</small>`)}
+        ${f.watchlist.length ? `<div class="rail">${f.watchlist.map(id => fcard({ ...(f.titles[id] || { title: "Untitled" }), id }, "", u.watchlist.includes(id) ? `<span class="both">On yours too</span>` : (f.titles[id]?.year || ""))).join("")}</div>` : `<p class="muted fnote">Nothing saved yet.</p>`}</section>`;
+    }).join(""));
   },
 
   diary(){
@@ -1824,7 +2028,21 @@ const Views = {
     const rated = Object.entries(u.ratings).sort((a, b) => b[1].at - a[1].at);
     const reviews = Object.entries(u.reviews).sort((a, b) => b[1].at - a[1].at);
     app.innerHTML = `<h1>Diary</h1>
-      <div class="tabs"><button class="btn on" data-tab="h">Watched · ${u.history.length}</button><button class="btn" data-tab="r">Ratings · ${rated.length}</button><button class="btn" data-tab="v">Reviews · ${reviews.length}</button></div><div id="tab"></div>`;
+      <div class="tabs"><button class="btn on" data-tab="h">Watched · ${u.history.length}</button><button class="btn" data-tab="r">Ratings · ${rated.length}</button><button class="btn" data-tab="v">Reviews · ${reviews.length}</button></div><div id="tab"></div><div id="fdi"></div>`;
+    // friends' diaries side by side: what they watched, how they rated it, what they said
+    friendSections($("#fdi"), fr => fr.length ? `<section class="sec"><div class="sec-h"><h2>Friends' diaries</h2><small>Latest first</small></div><div class="fdiaries">${fr.map(f => {
+      if (!f.mutual) return `<div class="panel fdiary">${friendHead(f, "")}${notShared(f)}</div>`;
+      const seen = new Set(), entries = [];
+      for (const h of f.history) if (!seen.has(h.id)) { seen.add(h.id); entries.push({ id: h.id, at: h.at }) }
+      for (const [id, r] of Object.entries(f.ratings)) if (!seen.has(id)) { seen.add(id); entries.push({ id, at: r.at }) }
+      entries.sort((a, b) => b.at - a.at);
+      const avg = Object.values(f.ratings).length ? Object.values(f.ratings).reduce((s, r) => s + r.stars, 0) / Object.values(f.ratings).length : 0;
+      return `<div class="panel fdiary">${friendHead(f, "", `<small>${f.history.length} watched · ${Object.keys(f.ratings).length} rated${avg ? ` · avg ${fmtScore(avg)}` : ""}</small>`)}
+        ${entries.length ? `<div class="flist">${entries.slice(0, 10).map(e => { const t = f.titles[e.id] || { title: "Untitled" }, r = f.ratings[e.id], v = f.reviews[e.id];
+          return `<a class="fentry" href="#/title/${encodeURIComponent(e.id)}">${t.poster ? `<img src="${esc(t.poster.replace("/w342/", "/w92/"))}" alt="" loading="lazy">` : `<span class="sg-ph"></span>`}
+            <span class="fe-txt"><b>${esc(t.title)}</b> <span class="muted">${esc(t.year || "")}</span><small>${ago(e.at)}${r ? " · " + miniBolts(r.stars) : ""}</small>${v ? `<q>${esc(v.text)}</q>` : ""}</span></a>` }).join("")}</div>` : `<p class="muted fnote">Nothing logged yet.</p>`}
+        <a class="fmore" href="#/user/${esc(f.username)}">Full diary →</a></div>`;
+    }).join("")}</div></section>` : "");
     const T = id => u.titles[id] || { id, title: "Untitled" };
     const row = (t, extra) => `<div class="li"><a href="#/title/${encodeURIComponent(t.id)}">${t.poster ? `<img src="${esc(t.poster)}" alt="">` : `<div class="ph"></div>`}</a><div class="grow"><a class="name" href="#/title/${encodeURIComponent(t.id)}">${esc(t.title)}</a> <span class="muted">${esc(t.year || "")}</span>${extra}</div></div>`;
     const tabs = {
@@ -1842,6 +2060,17 @@ const Views = {
 
   collections(name){
     const u = Store.me(); if (!u) return needLogin();
+    // a friend's collection: #/collections/@name/Collection name (read-only)
+    if (name && name.startsWith("@")) {
+      const [who, ...rest] = name.slice(1).split("/"), cname = rest.join("/");
+      app.innerHTML = `<p><a href="#/collections" class="muted">← All collections</a></p><div id="fcv">${skelGrid(8)}</div>`;
+      getFriends().then(fr => {
+        const f = fr.find(x => x.username === who), ids = f?.collections[cname];
+        if (!$("#fcv")) return;
+        $("#fcv").innerHTML = ids ? `<div class="fhead-big">${avatar(who, true)}<div><small class="muted">@${esc(who)}'s collection</small><h1 style="margin:0">${esc(cname)}</h1></div></div>${grid(ids.map(id => ({ ...(f.titles[id] || { title: "Untitled" }), id })), empty("Empty for now", "Nothing in this one yet."))}` : empty("Not found", "That collection isn't shared with you.");
+      });
+      return;
+    }
     if (name && u.collections[name]) {
       app.innerHTML = `<p><a href="#/collections" class="muted">← All collections</a></p><div class="row" style="justify-content:space-between"><h1>${esc(name)}</h1><button class="btn small danger" id="delc">Delete collection</button></div>${grid(u.collections[name].map(i => u.titles[i] || { id: i, title: "Untitled" }), empty("Empty for now", "Add titles from any title page."))}`;
       $("#delc").onclick = async () => { if (confirm(`Delete “${name}”? The titles stay in your diary.`)) { await act(() => Store.deleteCollection(name), "Collection deleted"); location.hash = "#/collections" } };
@@ -1852,12 +2081,19 @@ const Views = {
       <form class="row" id="nc" style="margin-bottom:22px"><input class="f" id="ncn" maxlength="80" placeholder="Name a collection, e.g. Rainy Sunday rewatches" style="max-width:380px"><button class="btn primary">Create</button></form>
       ${names.length ? `<div class="list">${names.map(n => { const first = u.titles[u.collections[n][0]]; return `<a class="li" style="text-decoration:none" href="#/collections/${encodeURIComponent(n)}">${first?.poster ? `<img src="${esc(first.poster)}" alt="">` : `<div class="ph"></div>`}<div class="grow"><b>${esc(n)}</b><div class="muted" style="font-size:13px">${u.collections[n].length} title${u.collections[n].length === 1 ? "" : "s"}</div></div></a>` }).join("")}</div>` : empty("No collections yet", "Group titles any way you like, then add to them from title pages.")}`;
     $("#nc").onsubmit = async e => { e.preventDefault(); await act(() => Store.createCollection($("#ncn").value), "Collection created"); Views.collections() };
+    // friends' collections as stacks of posters
+    app.insertAdjacentHTML("beforeend", `<div id="fco"></div>`);
+    const stack = (f, ids) => `<span class="pstack">${ids.slice(0, 3).map((id, k) => { const t = f.titles[id]; return t?.poster ? `<img src="${esc(t.poster.replace("/w342/", "/w154/"))}" alt="" style="--k:${k}" loading="lazy">` : `<span class="sg-ph" style="--k:${k}"></span>` }).join("") || `<span class="sg-ph"></span>`}</span>`;
+    friendSections($("#fco"), fr => fr.map(f => {
+      const names = Object.keys(f.collections);
+      return `<section class="sec">${friendHead(f, "collections")}${!f.mutual ? notShared(f) : names.length ? `<div class="fcolls">${names.map(n => `<a class="fcoll panel" href="#/collections/${encodeURIComponent("@" + f.username + "/" + n)}">${stack(f, f.collections[n])}<b>${esc(n)}</b><small class="muted">${f.collections[n].length} title${f.collections[n].length === 1 ? "" : "s"}</small></a>`).join("")}</div>` : `<p class="muted fnote">No collections yet.</p>`}</section>`;
+    }).join(""));
   },
 
   async friends(){
     const u = Store.me(); if (!u) return needLogin();
     app.innerHTML = `<h1>Friends</h1>
-      <p class="muted" style="max-width:640px">Add someone by username. Once they add you back, you can see each other's ratings, reviews and diary. Watchlists and collections stay private.</p>
+      <p class="muted" style="max-width:640px">Add someone by username. Once they add you back, you can see each other's ratings, reviews, diary, watchlist and collections.</p>
       <form class="row" id="af" style="margin:16px 0 26px"><input class="f" id="afn" placeholder="@username" style="max-width:260px" autocomplete="off"><button class="btn primary">Add friend</button></form>
       <div id="inc"></div><div id="fl">${skelGrid(0)}</div>`;
     $("#af").onsubmit = async e => { e.preventDefault(); await act(() => Store.addFriend($("#afn").value), "Friend added"); Views.friends() };
@@ -1979,13 +2215,13 @@ function watchSpot(t){
   play.addEventListener("click", e => { if (spot() === "room") { e.stopImmediatePropagation(); location.hash = "#/room/" + encodeURIComponent(t.id) } }, true);
 }
 
-// The Rain Room uses the same Stellar TMDB player as the title page.
+// The Rain Room uses the same Videasy TMDB player as the title page.
 async function roomSource(id){
   const stream = Streams.find(id);
   const prov = Providers.for(id);
   let t = null; try { t = prov?.ready() ? await prov.details(id) : null } catch {}
   return stream
-    ? { embed: stream.embed, kind: "Stellar", title: t?.title || "", tmdbId: stream.tmdbId }
+    ? { embed: stream.embed, kind: "Videasy", title: t?.title || "", tmdbId: stream.tmdbId }
     : { none: true, title: t?.title || "" };
 }
 
@@ -2324,20 +2560,14 @@ const Room = {
     const [src] = await Promise.all([roomSource(id), new Promise(r => setTimeout(r, 650))]);
     if (!this.running || playRequest !== this.playRequest) return;
     $("#rmTitle").textContent = src.title || "Untitled";
-    if (src.none) { $("#rmKind").textContent = "No signal"; this.osd(src.title || "No signal", "A TMDB ID is required for Stellar"); return }
+    if (src.none) { $("#rmKind").textContent = "No signal"; this.osd(src.title || "No signal", "A TMDB ID is required for Videasy"); return }
     $("#rmKind").textContent = "Now playing · " + src.kind;
     const f = document.createElement("iframe");
-    f.id = "room-stellar-player";
-    f.src = src.embed; f.title = (src.title || "Video") + " · Stellar player on the room TV";
+    f.id = "room-videasy-player";
+    f.src = src.embed; f.title = (src.title || "Video") + " · Videasy player on the room TV";
     f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
-    const initialize = () => f.contentWindow?.postMessage({ type: "STELLAR_EMBED_INIT" }, "https://stellar.rip");
-    const onMessage = event => {
-      if (event.origin !== "https://stellar.rip" || event.source !== f.contentWindow) return;
-      if (event.data?.type === "STELLAR_EMBED_READY") initialize();
-    };
-    window.addEventListener("message", onMessage);
-    this.playerMessageCleanup = () => window.removeEventListener("message", onMessage);
-    f.addEventListener("load", () => { if (playRequest !== this.playRequest) return; this.staticOn = false; this.playing = true; this.osd("", ""); initialize() });
+    // Videasy embeds work directly; no Stellar initialization handshake is required.
+    f.addEventListener("load", () => { if (playRequest !== this.playRequest) return; this.staticOn = false; this.playing = true; this.osd("", "") });
     this.screen.insertBefore(f, this.screen.querySelector(".crt"));
   },
   osd(a, b){ const o = this.screen.querySelector(".tv-osd"); o.hidden = !a; o.innerHTML = a ? `<b>${esc(a)}</b><span>${esc(b)}</span>` : "" },
@@ -2479,6 +2709,7 @@ async function boot(){
   } else if (Store.recovery) history.replaceState(null, "", location.pathname + "#/reset");
   applyTheme();
   $("#searchForm").addEventListener("submit", e => { e.preventDefault(); const q = $("#q").value.trim(); if (q) { Storm.strike(); location.hash = "#/search/" + encodeURIComponent(q) } });
+  attachSuggest($("#q"), $("#searchForm"));
   $("#wx").addEventListener("click", openForecast);
   addEventListener("keydown", e => { if (e.key === "Escape") closeForecast() });
   $("#logo").addEventListener("click", () => { const r = $("#logo svg").getBoundingClientRect(); Storm.strike({ x: r.left + r.width / 2 }) });
