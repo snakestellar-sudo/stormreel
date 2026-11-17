@@ -185,6 +185,11 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14p
   box-shadow:0 0 0 1px rgba(var(--glow-rgb),.5),0 0 80px -10px rgba(var(--glow-rgb),.55)}
 .th-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 .th-foot{font-size:12px;color:#93a0b8}
+.inline-player{scroll-margin-top:24px;margin-top:22px}
+.inline-player .sec-h{display:flex;justify-content:space-between;align-items:center;gap:16px}
+.inline-player .th-frame{max-height:none;aspect-ratio:16/9;width:100%;min-height:220px}
+.inline-player .th-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+@media(max-width:640px){.inline-player .th-frame{min-height:190px}}
 
 /* ============ LISTS ============ */
 .list{display:flex;flex-direction:column;gap:8px}
@@ -977,20 +982,18 @@ function whereToWatch(t, stream){
     <div class="panel">${rows || `<p class="muted" style="margin:0">Not streaming anywhere in ${REGION} right now.</p>`}</div></section>`;
 }
 
-// Full-screen player. The sky rests while you watch.
+// Inline player: expands within the title page so reviews, cast and recommendations remain below it.
 let closeTheater = null;
 function theater(t, season = 1, episode = 1){
   closeTheater?.();
-  const el = document.createElement("div");
-  el.className = "theater";
-  el.setAttribute("role", "dialog");
-  el.setAttribute("aria-modal", "true");
+  const feature = app.querySelector(".feature");
+  if (!feature) return;
+  const el = document.createElement("section");
+  el.className = "inline-player sec";
   el.setAttribute("aria-label", "Now playing: " + t.title);
-  el.innerHTML = `<div class="th-in">
-      <div class="th-top"><div><div class="kicker" style="margin:0 0 2px">Now playing · Stellar</div><div class="th-title">${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</div></div><button class="btn small" id="thClose">Close ✕</button></div>
-      <div class="th-frame" id="PlayerContainer"></div>
-      <div class="th-foot muted">Video provided by Stellar.</div>
-    </div>`;
+  el.innerHTML = `<div class="sec-h"><div><div class="kicker" style="margin:0 0 4px">Now playing · Stellar</div><h2>${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</h2></div><button class="btn small" id="thClose">Close ✕</button></div>
+    <div class="th-frame" id="PlayerContainer"></div>
+    <div class="th-foot muted">Video provided by Stellar.</div>`;
   const player = el.querySelector("#PlayerContainer");
   const stream = Streams.find(t, season, episode);
   if (!stream) {
@@ -1000,14 +1003,12 @@ function theater(t, season = 1, episode = 1){
     iframe.id = "stellar-player";
     iframe.src = stream.embed;
     iframe.title = `${t.title} · Stellar player`;
-    iframe.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0";
     iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
     iframe.allowFullscreen = true;
     player.appendChild(iframe);
   }
-  document.body.appendChild(el);
-  document.body.style.overflow = "hidden";
+  feature.insertAdjacentElement("afterend", el);
   const playerOrigin = "https://stellar.rip";
   const getPlayerFrame = () => el.querySelector("#stellar-player");
   const initializePlayerMessages = () => {
@@ -1030,19 +1031,14 @@ function theater(t, season = 1, episode = 1){
   frame?.addEventListener("load", initializePlayerMessages);
   if (frame) initializePlayerMessages();
   window.addEventListener("message", onPlayerMessage);
-  const key = e => { if (e.key === "Escape") closeTheater?.(); };
   closeTheater = () => {
     el.remove();
-    document.body.style.overflow = "";
-    window.removeEventListener("keydown", key);
     window.removeEventListener("message", onPlayerMessage);
     closeTheater = null;
     Storm.start();
   };
-  window.addEventListener("keydown", key);
   el.querySelector("#thClose").onclick = closeTheater;
-  el.onclick = e => { if (e.target === el) closeTheater(); };
-  el.querySelector("#thClose").focus();
+  el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 const needLogin = () => { app.innerHTML = `<div class="panel narrow"><h1>Take shelter</h1><p class="muted">Sign in to keep a watchlist, a diary and collections that follow you to any device.</p><a class="btn primary" href="#/login">Sign in or join</a></div>` };
@@ -1074,8 +1070,15 @@ const Views = {
       <section class="sec"><div class="sec-h"><h2>Popular series</h2></div><div id="pt">${skelGrid(12)}</div></section>`;
     $("#heroSearch").onsubmit = e => { e.preventDefault(); const q = $("#hq").value.trim(); if (q) { Storm.strike(); location.hash = "#/search/" + encodeURIComponent(q) } };
     const fill = async (sel, fn, r) => { const el = $(sel); if (!el) return; try { const list = await fn(); el.innerHTML = r ? rail(list, true) : grid(list.slice(0, 18)) } catch (e) { el.innerHTML = empty("Signal lost", esc(e.message)) } };
-    if ($("#fw")) $("#fw").innerHTML = rail(await freeFilms().catch(() => []));
-    fill("#tr", () => p.trending(), true); fill("#pm", () => p.popular("movie")); fill("#pt", () => p.popular("tv"));
+    if ($("#fw")) {
+      freeFilms().then(list => { if ($("#fw")) $("#fw").innerHTML = rail(list); })
+        .catch(() => { if ($("#fw")) $("#fw").innerHTML = empty("Signal lost", "Free titles could not be loaded right now."); });
+    }
+    // Start each TMDB shelf independently so one slow endpoint cannot leave every
+    // homepage rail stuck on skeleton placeholders.
+    fill("#tr", () => p.trending(), true);
+    fill("#pm", () => p.popular("movie"));
+    fill("#pt", () => p.popular("tv"));
   },
 
   async free(){
