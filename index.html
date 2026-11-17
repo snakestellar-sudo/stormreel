@@ -33,6 +33,50 @@
   --text:#e9f4e6; --muted:#93a896; --accent:#c4f26b; --accent-ink:#0d1a06; --danger:#ff8c6e;
   color-scheme:dark;
 }
+:root[data-theme="polar"]{
+  --sky-1:#02040c; --sky-2:#09132e; --sky-3:#1a2a4d; --mist:rgba(26,42,77,.85);
+  --cloud-rgb:56 68 102; --lit-rgb:214 236 255; --rain-rgb:170 200 240; --bolt-rgb:240 248 255; --glow-rgb:140 220 255;
+  --snow-rgb:246 250 255; --aurora:1; --aurora-a:90 255 180; --aurora-b:160 110 255;
+  --surface:rgba(7,13,31,.72); --surface-2:rgba(21,33,63,.74); --line:rgba(160,215,255,.17);
+  --text:#edf5ff; --muted:#93a5c6; --accent:#9be7ff; --accent-ink:#03131f; --danger:#ff8a8a;
+  color-scheme:dark;
+}
+:root[data-theme="dune"]{
+  --sky-1:#170e06; --sky-2:#5e3b1d; --sky-3:#b97e45; --mist:rgba(185,126,69,.7); --sky-rgb:23 14 6;
+  --cloud-rgb:150 104 60; --lit-rgb:255 226 186; --rain-rgb:226 184 124; --bolt-rgb:255 240 220; --glow-rgb:255 180 90;
+  --haze-rgb:190 132 72; --sun-rgb:255 214 150; --snow-rgb:240 220 190;
+  --surface:rgba(30,18,8,.74); --surface-2:rgba(72,46,22,.74); --line:rgba(255,200,140,.2);
+  --text:#fbf0e2; --muted:#cdb08f; --accent:#ffb45e; --accent-ink:#2a1503; --danger:#ff7a5c;
+  color-scheme:dark;
+}
+:root[data-theme="inferno"]{
+  --sky-1:#040203; --sky-2:#190c0b; --sky-3:#3e1610; --mist:rgba(62,22,16,.85); --sky-rgb:4 2 3;
+  --cloud-rgb:58 48 50; --lit-rgb:255 170 120; --rain-rgb:170 158 156; --bolt-rgb:246 228 255; --glow-rgb:190 110 255;
+  --snow-rgb:176 168 165; --ember-rgb:255 120 36;
+  --surface:rgba(14,9,9,.76); --surface-2:rgba(42,25,22,.76); --line:rgba(255,150,100,.17);
+  --text:#f7ede9; --muted:#b39c95; --accent:#ff7a3d; --accent-ink:#1f0800; --danger:#ff6b6b;
+  color-scheme:dark;
+}
+:root[data-theme="neon"]{
+  --sky-1:#04020d; --sky-2:#150a2c; --sky-3:#3a1240; --mist:rgba(58,18,64,.8); --sky-rgb:6 3 16;
+  --cloud-rgb:66 48 98; --lit-rgb:255 160 230; --rain-rgb:205 175 255; --bolt-rgb:255 232 255; --glow-rgb:255 80 200;
+  --neon-a:255 60 180; --neon-b:40 220 255;
+  --surface:rgba(10,6,24,.74); --surface-2:rgba(30,18,58,.74); --line:rgba(255,120,220,.18);
+  --text:#f4edff; --muted:#ab9dc8; --accent:#ff5ccf; --accent-ink:#1a0216; --danger:#ff7a8a;
+  color-scheme:dark;
+}
+:root[data-theme="cosmos"]{
+  --sky-1:#010007; --sky-2:#06031a; --sky-3:#120a2e; --mist:rgba(18,10,46,.75); --sky-rgb:1 0 7;
+  --cloud-rgb:48 38 88; --lit-rgb:220 210 255; --rain-rgb:200 200 255; --bolt-rgb:255 255 255; --glow-rgb:175 145 255;
+  --neb-a:140 80 255; --neb-b:40 200 220; --snow-rgb:255 255 255;
+  --surface:rgba(6,4,20,.74); --surface-2:rgba(22,16,52,.74); --line:rgba(180,160,255,.18);
+  --text:#f2efff; --muted:#a49dc6; --accent:#b89dff; --accent-ink:#0d0626; --danger:#ff7a9a;
+  color-scheme:dark;
+}
+:root{ --snow-rgb:240 246 255; --snow-edge:0; --aurora:0; --aurora-a:90 255 180; --aurora-b:160 110 255; --sky-rgb:4 6 11;
+  --haze-rgb:190 132 72; --sun-rgb:255 214 150; --ember-rgb:255 120 36; --neon-a:255 60 180; --neon-b:40 220 255; --neb-a:140 80 255; --neb-b:40 200 220; }
+:root[data-theme="overcast"]{ --snow-rgb:255 255 255; --snow-edge:.32 }
+:root[data-theme="supercell"]{ --snow-rgb:236 250 228 }
 :root{ --flash:0; --r:12px; --display:"Big Shoulders Display", Impact, sans-serif; }
 
 /* ============ BASE ============ */
@@ -191,6 +235,116 @@ label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:14p
 .inline-player .th-frame iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 @media(max-width:640px){.inline-player .th-frame{min-height:190px}}
 
+/* ============ SNOW EXTRAS ============ */
+/* frosted screen edges, thicker in a blizzard */
+#frost{position:fixed;inset:0;pointer-events:none;z-index:2;opacity:0;transition:opacity 2.5s ease;
+  background:radial-gradient(ellipse 125% 110% at 50% 45%,transparent 60%,rgba(var(--snow-rgb),.09) 78%,rgba(var(--snow-rgb),.3) 100%)}
+:root[data-weather="snow"] #frost{opacity:.65}
+:root[data-weather="blizzard"] #frost{opacity:1}
+/* snow settling on top of posters, genre tiles and the big search box */
+.poster::after,.gtile::after,.bigsearch::before{content:"";position:absolute;left:0;right:0;top:0;height:11px;z-index:3;pointer-events:none;opacity:0;transform:translateY(-6px);
+  transition:opacity 1.8s ease,transform 1.8s ease;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 12' preserveAspectRatio='none'%3E%3Cpath d='M0 0h100v6c-3 1-5 0-8 1-2 3-4 4-6 1-4 0-7 1-11 0-3 0-5 2-8 1-3-1-6 0-10 1-2 3-4 3-5 0-4-1-8 0-12 1-3 1-6-1-9 0-3 2-5 2-7 0-6 0-12 0-24-1z' fill='%23f6faff'/%3E%3C/svg%3E") top/100% 100% no-repeat;
+  filter:drop-shadow(0 1px 1.5px rgba(10,20,40,.35))}
+.bigsearch{position:relative}
+.bigsearch::before{height:12px;border-radius:14px 14px 0 0}
+:root[data-weather="snow"] :is(.poster,.gtile)::after,:root[data-weather="snow"] .bigsearch::before,
+:root[data-weather="blizzard"] :is(.poster,.gtile)::after,:root[data-weather="blizzard"] .bigsearch::before{opacity:1;transform:none}
+.tag{z-index:4}
+/* sandstorm: amber haze at the edges, sand drifted against the bottom of every poster */
+:root[data-weather="sandstorm"] #frost{opacity:1;background:radial-gradient(ellipse 120% 100% at 50% 40%,transparent 50%,rgba(var(--haze-rgb),.22) 80%,rgba(var(--haze-rgb),.45) 100%)}
+:root[data-weather="sandstorm"] .poster::after{opacity:1;top:auto;bottom:0;transform:scaleY(-1);height:13px;filter:sepia(1) saturate(2.4) hue-rotate(-14deg) brightness(.82) drop-shadow(0 -1px 1px rgba(0,0,0,.3))}
+/* ash storm: grey ash settles on posters, the screen edges glow like a nearby eruption */
+:root[data-weather="ash"] .poster::after,:root[data-weather="ash"] .gtile::after,:root[data-weather="ash"] .bigsearch::before{opacity:1;transform:none;filter:grayscale(1) brightness(.62) drop-shadow(0 1px 1px rgba(0,0,0,.5))}
+:root[data-weather="ash"] #frost{opacity:1;background:radial-gradient(ellipse 130% 90% at 50% 10%,transparent 55%,rgba(var(--ember-rgb),.12) 85%,rgba(var(--ember-rgb),.3) 100%)}
+/* tornado: a darker, green-tinged vignette */
+:root[data-weather="tornado"] #frost{opacity:1;background:radial-gradient(ellipse 120% 110% at 50% 45%,transparent 55%,rgba(10,20,10,.35) 100%)}
+/* solar storm: brief interference glitches */
+html.glitch main,html.glitch header{transform:translateX(3px) skewX(-.6deg);filter:hue-rotate(28deg) saturate(1.5)}
+html.glitch h1,html.glitch h2,html.glitch .word{text-shadow:-2px 0 rgba(255,0,90,.75),2px 0 rgba(0,255,230,.75)}
+@media (prefers-reduced-motion:reduce){html.glitch main,html.glitch header{transform:none;filter:none}}
+
+/* ============ FORECAST MENU ============ */
+.tools{position:relative}
+.wxmenu{position:absolute;top:calc(100% + 10px);right:0;z-index:60;width:min(560px,calc(100vw - 32px));max-height:min(70vh,620px);overflow:auto;
+  background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;backdrop-filter:blur(18px) saturate(1.3);-webkit-backdrop-filter:blur(18px) saturate(1.3);
+  box-shadow:0 24px 60px -20px rgba(0,0,0,.7);animation:rise .2s ease both}
+.wxg + .wxg{margin-top:12px}
+.wxg-h{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px 2px}
+.wxg-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px}
+.wxopt{text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:9px 11px;display:block}
+.wxopt b{display:block;font-size:14px}
+.wxopt small{display:block;font-size:12px;color:var(--muted);line-height:1.35;margin-top:2px}
+.wxopt:hover{border-color:rgba(var(--glow-rgb),.6)}
+.wxopt.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.wxopt.on b{color:var(--accent)}
+.wxmenu-foot{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;border-top:1px solid var(--line);margin-top:14px;padding-top:12px;font-size:13px;color:var(--muted)}
+.wxmenu-foot a{color:var(--accent)}
+@media (max-width:640px){.wxmenu{position:fixed;top:64px;left:16px;right:16px;width:auto}}
+:root[data-weather="blizzard"] .bigsearch input::placeholder{color:rgba(var(--snow-rgb),.75)}
+
+/* ============ GENRES ============ */
+.genre-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.gtile{position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;text-decoration:none;display:flex;align-items:flex-end;padding:10px 12px;
+  background:var(--surface-2) center/cover no-repeat;border:1px solid var(--line);transition:transform .2s,box-shadow .2s}
+.gtile::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,6,12,.05) 20%,rgba(3,6,12,.82))}
+.gtile span{position:relative;font-family:var(--display);font-weight:900;font-size:22px;letter-spacing:.03em;text-transform:uppercase;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+.gtile:hover{transform:translateY(-3px);box-shadow:0 0 0 2px var(--accent),0 16px 36px -16px rgba(var(--glow-rgb),.7)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+@media (max-width:520px){.genre-grid{grid-template-columns:repeat(2,1fr)}.gtile span{font-size:18px}}
+
+/* ============ WATCH-ON TOGGLE ============ */
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:none;padding:9px 13px;font-size:13px;font-weight:700;color:var(--muted)}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+
+/* ============ RAIN ROOM ============ */
+body[data-route="/room"] :is(header,footer,#sky,.mist,#frost){display:none}
+body[data-route="/room"]{overflow:hidden}
+.room{position:fixed;inset:0;z-index:50;background:#05030c;overflow:hidden;color:#efe9ff;font-family:Manrope,system-ui,sans-serif}
+.room-stage{position:absolute;left:0;top:0;width:1600px;height:900px;transform-origin:0 0;transition:transform 1.2s cubic-bezier(.65,0,.35,1)}
+.rl{position:absolute;inset:0;will-change:transform}
+.rl-front,.rl-front *{pointer-events:none}
+.room canvas.px{position:absolute;left:-50px;top:-25px;width:1700px;height:950px;image-rendering:pixelated;image-rendering:crisp-edges;pointer-events:none}
+.tv-screen{position:absolute;overflow:hidden;border-radius:22px/30px;background:#000;box-shadow:inset 0 0 30px rgba(0,0,0,.8),0 0 40px rgba(127,224,176,.12)}
+.crt{position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:inherit;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px),radial-gradient(ellipse at center,rgba(127,224,176,.06),transparent 55%,rgba(0,0,0,.6));
+  box-shadow:inset 0 0 22px rgba(0,0,0,.7)}
+.tv-screen iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tv-static{position:absolute;inset:0;width:100%;height:100%;opacity:.55;image-rendering:pixelated}
+.tv-osd{position:absolute;inset:0;display:grid;place-content:center;text-align:center;gap:2px;text-shadow:0 0 8px #7fe7ff}
+.tv-osd b{font-family:var(--display);font-weight:900;font-size:26px;letter-spacing:.06em;text-transform:uppercase;color:#e9fbff}
+.tv-osd span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#bfefff}
+.room-fx{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 85% 80% at 50% 50%,transparent 55%,rgba(0,0,0,.55)),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.08'/%3E%3C/svg%3E");
+  animation:grain .9s steps(4) infinite}
+@keyframes grain{0%{background-position:0 0,0 0}25%{background-position:0 0,-40px 20px}50%{background-position:0 0,30px -30px}75%{background-position:0 0,-20px -40px}}
+/* controls */
+.room-back,.remote,.room-show{position:absolute;z-index:3;transition:opacity .4s}
+.room-back{top:16px;left:16px;text-decoration:none;font-weight:700;font-size:14px;padding:8px 12px;border-radius:9px;background:rgba(10,6,24,.6);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(10px);color:#efe9ff}
+.remote{left:50%;bottom:18px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 32px);
+  padding:10px 12px;border-radius:14px;background:rgba(10,6,24,.66);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.remote .np{display:flex;flex-direction:column;min-width:150px;max-width:260px;margin-right:6px}
+.remote .np small{font-size:11px;color:#ab9dc8;letter-spacing:.06em;text-transform:uppercase}
+.remote .np b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.room .btn{--surface-2:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--accent:#ff5ccf;--accent-ink:#1a0216;color:#efe9ff}
+.room .btn.primary,.room .btn.on{color:#1a0216}
+.room [hidden]{display:none!important}
+.room-show{bottom:18px;right:18px;opacity:.55}
+.room-show:hover{opacity:1}
+.room.ui-hidden .room-back,.room.ui-hidden .remote{opacity:0;pointer-events:none}
+.room-drawer{position:absolute;z-index:4;top:0;right:0;bottom:0;width:min(420px,100vw);overflow:auto;padding:20px;
+  background:rgba(8,5,20,.88);border-left:1px solid rgba(255,255,255,.1);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);animation:slidein .3s ease both}
+@keyframes slidein{from{transform:translateX(30px);opacity:0}}
+.room-drawer h2{color:#efe9ff}
+.room-drawer .f{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);color:#efe9ff}
+.rm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.rm-grid .card .t{font-size:12px;color:#efe9ff}
+.room .empty{color:#ab9dc8;border-color:rgba(255,255,255,.14)}
+.room .empty b{color:#efe9ff}
+@media (max-width:640px){.remote .np{min-width:0;flex-basis:100%;margin:0;text-align:center}}
+@media (prefers-reduced-motion:reduce){.room *{animation:none!important}.room-stage{transition:none}}
+
 /* ============ LISTS ============ */
 .list{display:flex;flex-direction:column;gap:8px}
 .li{display:flex;gap:14px;align-items:center;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
@@ -220,6 +374,7 @@ footer .word{font-size:18px;color:var(--text);display:block;margin-bottom:8px}
 <body>
 <canvas id="sky" aria-hidden="true"></canvas>
 <div class="mist" aria-hidden="true"></div>
+<div id="frost" aria-hidden="true"></div>
 
 <header>
   <div class="bar">
@@ -303,6 +458,16 @@ const TMDBProvider = {
   async basic(id){ const [, type, tid] = id.split(":"); return this.norm(await this.get(`/${type}/${tid}`), type) },
   async trending(){ return (await this.get("/trending/all/week")).results.map(r => this.norm(r)).filter(Boolean) },
   async popular(type){ return (await this.get(`/${type}/popular`)).results.map(r => this.norm(r, type)) },
+  // Browse by genre / keyword. sort: "popular" | "top" | "new"
+  async discover(type, params = {}, page = 1, sort = "popular"){
+    const today = new Date().toISOString().slice(0, 10), date = type === "tv" ? "first_air_date" : "primary_release_date";
+    const S = { popular: { sort_by: "popularity.desc", "vote_count.gte": 30 },
+                top:     { sort_by: "vote_average.desc", "vote_count.gte": 400 },
+                new:     { sort_by: `${date}.desc`, [`${date}.lte`]: today, "vote_count.gte": 15 } }[sort] || {};
+    const d = await this.get(`/discover/${type}`, { include_adult: "false", ...S, ...params, page });
+    return { items: d.results.map(r => this.norm(r, type)), pages: Math.min(d.total_pages || 1, 500) };
+  },
+  async list(path, type){ return (await this.get(path)).results.map(r => this.norm(r, type)) },
   async search(q){ return (await this.get("/search/multi", { query: q, include_adult: "false" })).results.map(r => this.norm(r)).filter(Boolean) },
   async details(id){
     const [, type, tid] = id.split(":");
@@ -490,7 +655,7 @@ const LocalStore = {
     if (password.length < 8) throw new Error("Password needs at least 8 characters.");
     if (this.d.users[username]) throw new Error("That username is taken.");
     const salt = crypto.getRandomValues(new Uint32Array(4)).join("-");
-    this.d.users[username] = { username, salt, hash: await this.hash(password, salt), theme: this.d.settings.theme || "thunderhead",
+    this.d.users[username] = { username, salt, hash: await this.hash(password, salt), theme: this.d.settings.theme || "auto",
       ratings: {}, reviews: {}, history: [], watchlist: [], collections: {}, friends: [], titles: {} };
     this.d.session = username; this.commit();
     return { signedIn: true };
@@ -589,7 +754,7 @@ const CloudStore = {
     const { data, error } = await this.sb.auth.signUp({ email: loginEmail(username), password, options: { data: { username } } });
     if (error) throw new Error(/email/i.test(error.message) ? `Supabase rejected the sign-in address (${error.message}). Change loginDomain in CONFIG.` : error.message);
     if (!data.session) throw new Error("Account made, but Supabase wants email confirmation. Turn off “Confirm email” in Supabase, then see the README to unlock this account.");
-    await this.load(data.user); await this.setTheme(LocalStore.settings().theme || "thunderhead");
+    await this.load(data.user); await this.setTheme(LocalStore.settings().theme || "auto");
     return { signedIn: true };
   },
   async signIn({ login, password }){
@@ -717,51 +882,139 @@ let Store = LocalStore;
 /* =====================================================================
    3. THE STORM  (animated canvas sky: clouds, rain, lightning)
    ===================================================================== */
+// Every weather: its menu group, matching colour theme, a one-line description, and the effects it switches on.
+const WEATHER = {
+  calm:      { label: "Calm",          group: "Rain",   theme: "thunderhead", desc: "Clouds drifting by, no rain",                rain: 0,   light: 0,   wind: .05 },
+  drizzle:   { label: "Drizzle",       group: "Rain",   theme: "thunderhead", desc: "Light, steady rain",                         rain: .3,  light: 0,   wind: .12 },
+  storm:     { label: "Storm",         group: "Rain",   theme: "thunderhead", desc: "Rain and lightning",                         rain: 1,   light: 1,   wind: .25 },
+  supercell: { label: "Supercell",     group: "Rain",   theme: "supercell",   desc: "Downpour, gusts, constant lightning",        rain: 1.9, light: 2.4, wind: .45 },
+  monsoon:   { label: "Monsoon",       group: "Rain",   theme: "neon",        desc: "Pouring rain over a city at night",          rain: 2.2, light: .2,  wind: .05, clouds: .7, city: 1, glass: 1, ripples: 1 },
+  snow:      { label: "Snow",          group: "Winter", theme: "polar",       desc: "Soft snowfall that piles up",                rain: 0, snow: 1,   light: 0,  wind: .1,  aurora: 1 },
+  blizzard:  { label: "Blizzard",      group: "Winter", theme: "polar",       desc: "Whiteout winds and thundersnow",             rain: 0, snow: 2.6, light: .3, wind: .85, thundersnow: true, aurora: .3 },
+  sandstorm: { label: "Sandstorm",     group: "Wild",   theme: "dune",        desc: "A wall of dust swallows the sun",            rain: 1.1, dropSpeed: .55, dropLen: .4, light: 0, wind: 2.6, haze: .34, sun: 1, dust: 1 },
+  tornado:   { label: "Tornado",       group: "Wild",   theme: "supercell",   desc: "A twister touching down on the horizon",     rain: .7, light: .8, wind: .55, tornado: 1 },
+  ash:       { label: "Ash storm",     group: "Wild",   theme: "inferno",     desc: "Falling ash, rising embers, purple lightning", rain: 0, snow: .9, ashFall: true, embers: 1, light: 1, cloudBolts: true, wind: .15, lava: 1 },
+  meteors:   { label: "Meteor shower", group: "Space",  theme: "cosmos",      desc: "Shooting stars. Click one to make a wish",   rain: 0, light: 0, wind: 0, clouds: 0, stars: 1.8, nebula: 1, meteors: 1 },
+  solar:     { label: "Solar storm",   group: "Space",  theme: "polar",       desc: "Northern lights in overdrive",               rain: 0, light: 0, wind: 0, clouds: .2, stars: 1, aurora: 1, auroraBoost: 2.4, glitch: 1 }
+};
+
 const Storm = {
-  levels: {
-    calm:      { label: "Calm",      rain: 0,    light: 0,   wind: .05 },
-    drizzle:   { label: "Drizzle",   rain: .3,   light: 0,   wind: .12 },
-    storm:     { label: "Storm",     rain: 1,    light: 1,   wind: .25 },
-    supercell: { label: "Supercell", rain: 1.9,  light: 2.4, wind: .45 }
-  },
-  order: ["calm", "drizzle", "storm", "supercell"],
-  level: "storm", t: 0, last: 0, wind: -.2, gust: 0, flash: 0, drops: [], splashes: [], bolts: [], clouds: [], sprites: [],
-  nextStrike: 2.5, running: false, still: matchMedia("(prefers-reduced-motion: reduce)").matches, mx: 0,
+  levels: WEATHER,
+  order: Object.keys(WEATHER),
+  level: "storm", t: 0, last: 0, wind: -.2, gust: 0, flash: 0,
+  drops: [], splashes: [], bolts: [], clouds: [], sprites: [], flakes: [], drift: [], stars: [],
+  embers: [], meteors: [], sparks: [], torP: [], debris: [], glass: [], ripples: [], bokeh: [],
+  px: -999, py: -999, nextStrike: 2.5, nextMeteor: 1, nextGlitch: 6,
+  running: false, still: matchMedia("(prefers-reduced-motion: reduce)").matches, mx: 0, onWish: null,
 
   init(){
     this.c = document.getElementById("sky"); this.x = this.c.getContext("2d");
-    this.level = LocalStore.settings().weather || "storm";
+    this.level = this.levels[LocalStore.settings().weather] ? LocalStore.settings().weather : "storm";
+    document.documentElement.dataset.weather = this.level;
     this.readColors(); this.resize();
     addEventListener("resize", () => { clearTimeout(this._r); this._r = setTimeout(() => this.resize(), 120) });
     document.addEventListener("visibilitychange", () => document.hidden ? this.stop() : this.start());
-    addEventListener("pointermove", e => { this.mx = e.clientX / innerWidth - .5 }, { passive: true });
+    addEventListener("pointermove", e => { this.mx = e.clientX / innerWidth - .5; this.px = e.clientX; this.py = e.clientY }, { passive: true });
+    document.addEventListener("pointerleave", () => { this.px = this.py = -999 });
+    // meteor shower: click a shooting star (anywhere that isn't a link or button) to make a wish
+    document.addEventListener("click", e => {
+      if (!this.cfg().meteors || e.target.closest?.("a,button,input,textarea,select,label,iframe,.panel,.feature")) return;
+      for (const m of this.meteors) {
+        const hx = m.x, hy = m.y, n = Math.hypot(m.vx, m.vy), tx = hx - m.vx / n * m.len, ty = hy - m.vy / n * m.len;
+        if (distToSeg(e.clientX, e.clientY, hx, hy, tx, ty) < 40) { this.burst(hx, hy); m.life = m.max; this.onWish?.(); return }
+      }
+    });
     this.start();
   },
   rgb(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim().split(/\s+/).join(",") },
   readColors(){
-    this.col = { cloud: this.rgb("--cloud-rgb"), lit: this.rgb("--lit-rgb"), rain: this.rgb("--rain-rgb"), bolt: this.rgb("--bolt-rgb"), glow: this.rgb("--glow-rgb") };
+    const cs = getComputedStyle(document.documentElement), v = n => this.rgb(n);
+    this.col = { cloud: v("--cloud-rgb"), lit: v("--lit-rgb"), rain: v("--rain-rgb"), bolt: v("--bolt-rgb"), glow: v("--glow-rgb"), snow: v("--snow-rgb"),
+      auroraA: v("--aurora-a"), auroraB: v("--aurora-b"), haze: v("--haze-rgb"), sun: v("--sun-rgb"), ember: v("--ember-rgb"),
+      neonA: v("--neon-a"), neonB: v("--neon-b"), nebA: v("--neb-a"), nebB: v("--neb-b"), sky: v("--sky-rgb") };
+    this.snowEdge = parseFloat(cs.getPropertyValue("--snow-edge")) || 0;
+    this.auroraTheme = parseFloat(cs.getPropertyValue("--aurora")) || 0;
     this.buildSprites();
+    if (this.w) this.buildScene();
   },
   resize(){
     this.dpr = Math.min(devicePixelRatio || 1, 1.5);
+    const oldW = this.w;
     this.w = innerWidth; this.h = innerHeight;
     this.c.width = this.w * this.dpr; this.c.height = this.h * this.dpr;
     this.x.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
-    this.spawnClouds(); this.spawnRain();
+    const cols = Math.ceil(this.w / 6) + 2, old = this.drift;
+    this.drift = Array.from({ length: cols }, (_, i) => old.length ? old[Math.min(old.length - 1, Math.floor(i * (oldW || this.w) / this.w))] || 0 : 0);
+    this.aur = document.createElement("canvas"); this.aur.width = Math.ceil(this.w / 4); this.aur.height = Math.ceil(this.h / 4);
+    this.spawnAll();
     if (this.still) this.frame(0);
   },
-  setLevel(l){ this.level = l; LocalStore.setSetting("weather", l); this.spawnRain(); this.nextStrike = this.t + 1.2; if (this.still) this.frame(0) },
+  setLevel(l){
+    this.level = l; LocalStore.setSetting("weather", l); document.documentElement.dataset.weather = l;
+    this.spawnAll(); this.nextStrike = this.t + 1.2; this.nextMeteor = this.t + .5;
+    if (typeof applyTheme === "function") applyTheme(); else this.buildScene();
+    if (this.still) this.frame(0);
+  },
+  spawnAll(){ this.spawnClouds(); this.spawnRain(); this.spawnSnow(); this.buildScene(); this.embers = []; this.meteors = []; this.debris = []; this.ripples = [] },
   cfg(){ return this.levels[this.level] || this.levels.storm },
+
+  // --- per-weather scenery, pre-rendered when the weather, theme or window size changes ---
+  buildScene(){
+    const cfg = this.cfg(), w = this.w, h = this.h, C = this.col;
+    if (!w) return;
+    const starN = Math.round(w * h / 9000 * Math.max(1, cfg.stars || 0));
+    this.stars = Array.from({ length: starN }, () => ({ x: Math.random() * w, y: Math.random() * h * (cfg.stars ? .95 : .6), r: Math.random() * (cfg.stars ? 1.6 : 1.2) + .3, ph: Math.random() * 6.3, sp: .5 + Math.random() * 2 }));
+    this.city = null; this.nebula = null;
+    if (cfg.city) {   // blurred city at night: skyline, lit windows and bokeh, drawn once
+      const cv = document.createElement("canvas"); cv.width = w; cv.height = h; const g = cv.getContext("2d");
+      const glow = g.createLinearGradient(0, h * .4, 0, h);
+      glow.addColorStop(0, `rgba(${C.neonA},0)`); glow.addColorStop(.7, `rgba(${C.neonA},.22)`); glow.addColorStop(1, `rgba(${C.neonB},.3)`);
+      g.fillStyle = glow; g.fillRect(0, 0, w, h);
+      g.filter = "blur(3px)";
+      for (let bx = -20; bx < w; ) {
+        const bw = 40 + Math.random() * 90, bh = h * (.14 + Math.random() * .3), by = h - bh;
+        g.fillStyle = `rgba(${C.sky},.94)`; g.fillRect(bx, by, bw, bh);
+        for (let wy = by + 8; wy < h - 6; wy += 9) for (let wx = bx + 5; wx < bx + bw - 5; wx += 8)
+          if (Math.random() < .32) { const c = [C.neonA, C.neonB, "255,200,130", "255,240,220"][Math.random() * 4 | 0]; g.fillStyle = `rgba(${c},${.25 + Math.random() * .5})`; g.fillRect(wx, wy, 3, 4) }
+        bx += bw + 2 + Math.random() * 10;
+      }
+      g.filter = "blur(10px)";
+      for (let i = 0; i < 60; i++) {
+        const c = [C.neonA, C.neonB, "255,190,110", "255,255,255"][Math.random() * 4 | 0], r = 8 + Math.random() * 30;
+        g.fillStyle = `rgba(${c},${.12 + Math.random() * .25})`; g.beginPath(); g.arc(Math.random() * w, h * (.6 + Math.random() * .4), r, 0, 7); g.fill();
+      }
+      g.filter = "none";
+      this.city = cv;
+      this.bokeh = Array.from({ length: 24 }, () => ({ x: Math.random() * w, y: h * (.62 + Math.random() * .36), r: 6 + Math.random() * 22, c: [C.neonA, C.neonB, "255,200,120"][Math.random() * 3 | 0], ph: Math.random() * 6.3 }));
+      this.glass = Array.from({ length: Math.round(w / 55) }, () => this.glassDrop(true));
+    }
+    if (cfg.nebula) {   // deep space: nebula clouds + a milky-way band, drawn once at low resolution
+      const cv = document.createElement("canvas"), W = Math.ceil(w / 3), H = Math.ceil(h / 3); cv.width = W; cv.height = H; const g = cv.getContext("2d");
+      g.globalCompositeOperation = "lighter";
+      for (let i = 0; i < 9; i++) {
+        const x = Math.random() * W, y = Math.random() * H, r = (.2 + Math.random() * .4) * Math.max(W, H), c = [C.nebA, C.nebB, "255,90,170"][i % 3];
+        const gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, `rgba(${c},.2)`); gr.addColorStop(1, `rgba(${c},0)`);
+        g.fillStyle = gr; g.fillRect(0, 0, W, H);
+      }
+      g.save(); g.translate(W / 2, H / 2); g.rotate(-.5);
+      const band = g.createLinearGradient(0, -H * .18, 0, H * .18);
+      band.addColorStop(0, "rgba(255,255,255,0)"); band.addColorStop(.5, "rgba(220,215,255,.13)"); band.addColorStop(1, "rgba(255,255,255,0)");
+      g.fillStyle = band; g.fillRect(-W, -H * .18, W * 2, H * .36);
+      g.fillStyle = "rgba(255,255,255,.55)";
+      for (let i = 0; i < 900; i++) { const u = (Math.random() - .5) * W * 2, vv = (Math.random() + Math.random() + Math.random() - 1.5) * H * .12; g.fillRect(u, vv, .6, .6) }
+      g.restore();
+      this.nebula = cv;
+    }
+  },
+  glassDrop(anyY){ return { x: Math.random() * this.w, y: anyY ? Math.random() * this.h : -20, r: 2.5 + Math.random() * 5, vy: 0, wait: Math.random() * 5, trail: 0 } },
 
   // --- clouds: soft puffs pre-rendered into sprites, drawn dark and "lit" ---
   buildSprites(){
     const rnd = mulberry(7);
     this.sprites = [];
-    // highlight tint = cloud colour nudged toward the lit colour, for soft tops
     const a = this.col.cloud.split(",").map(Number), b = this.col.lit.split(",").map(Number);
     const hl = a.map((v, i) => Math.round(v + (b[i] - v) * .22)).join(",");
     for (let v = 0; v < 6; v++) {
-      // generous padding so no puff is ever clipped by the sprite's edges
       const W = 900, H = 520, cx = W / 2, cy = 270, puffs = [];
       const n = 30 + Math.floor(rnd() * 16);
       for (let i = 0; i < n; i++) {
@@ -785,28 +1038,40 @@ const Storm = {
   spawnClouds(){
     const rnd = mulberry(42); this.clouds = [];
     const layers = [{ d: .35, n: 6, y: [-.08, .12], s: [.7, 1.1], a: .55 }, { d: .65, n: 6, y: [-.04, .22], s: [1, 1.5], a: .75 }, { d: 1, n: 5, y: [.02, .32], s: [1.3, 2.1], a: .95 }];
+    if (this.cfg().dust) layers.push({ d: 1.4, n: 9, y: [.3, .85], s: [1.4, 2.4], a: .8 });   // the low dust wall
     for (const L of layers) {
       const count = Math.max(3, Math.round(L.n * this.w / 1200)) + 1;
       for (let i = 0; i < count; i++) this.clouds.push({ sp: Math.floor(rnd() * 6), d: L.d, a: L.a, s: L.s[0] + rnd() * (L.s[1] - L.s[0]),
         x: (i / count) * (this.w + 800) - 400 + rnd() * 120, y: (L.y[0] + rnd() * (L.y[1] - L.y[0])) * this.h, v: 6 + rnd() * 8 });
     }
   },
-  // --- rain ---
+  // --- rain (also sand grains: same physics, sideways and shorter) ---
   spawnRain(){
-    const n = Math.min(1100, Math.round(this.w * this.h / 5200 * this.cfg().rain));
+    const n = Math.min(1100, Math.round(this.w * this.h / 5200 * (this.cfg().rain || 0)));
     this.drops = Array.from({ length: n }, () => this.drop(true));
   },
   drop(anyY){
-    const z = .25 + Math.random() * .75;
-    return { x: Math.random() * (this.w + 400) - 200, y: anyY ? Math.random() * this.h : -Math.random() * 120, z, len: 8 + 26 * z, v: 700 + 900 * z };
+    const z = .25 + Math.random() * .75, c = this.cfg();
+    return { x: Math.random() * (this.w + 400) - 200, y: anyY ? Math.random() * this.h : -Math.random() * 120, z, len: (8 + 26 * z) * (c.dropLen || 1), v: (700 + 900 * z) * (c.dropSpeed || 1) };
   },
+  // --- snow (also volcanic ash) ---
+  spawnSnow(){
+    const n = Math.min(1000, Math.round(this.w * this.h / 4200 * (this.cfg().snow || 0)));
+    this.flakes = Array.from({ length: n }, () => this.flake(true));
+  },
+  flake(anyY){
+    const z = .2 + Math.random() * .8, ash = this.cfg().ashFall;
+    return { bx: Math.random() * (this.w + 300) - 150, y: anyY ? Math.random() * this.h : -8 - Math.random() * 80, z,
+      r: (.6 + z * z * 2.8) * (ash ? .75 : 1), vy: (18 + z * 58 + Math.random() * 10) * (ash ? .55 : 1), ph: Math.random() * 6.3, sw: .5 + Math.random() * 1.3, amp: 8 + z * 26 };
+  },
+  burst(x, y){ for (let i = 0; i < 26; i++) { const a = Math.random() * 6.3, s = 60 + Math.random() * 220; this.sparks.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: .6 + Math.random() * .5 }) } },
   // --- lightning ---
   strike(o = {}){
     if (this.still) return;
-    const w = this.w, h = this.h;
+    const w = this.w, h = this.h, cfg = this.cfg();
     const x0 = o.x ?? w * (.1 + Math.random() * .8), y0 = h * (.04 + Math.random() * .14);
-    const ground = o.big || Math.random() < .55;
-    const x1 = x0 + (Math.random() - .5) * w * (ground ? .25 : .7), y1 = ground ? h * (.9 + Math.random() * .15) : h * (.3 + Math.random() * .25);
+    const ground = !cfg.cloudBolts && (o.big || Math.random() < .55);
+    const x1 = x0 + (Math.random() - .5) * w * (ground ? .25 : .7), y1 = ground ? h * (.9 + Math.random() * .15) : h * (.25 + Math.random() * .2);
     const main = bolt(x0, y0, x1, y1, ground ? 140 : 90, ground ? 5 : 3.5);
     const branches = [];
     const nb = 2 + Math.floor(Math.random() * (ground ? 6 : 4));
@@ -816,8 +1081,8 @@ const Storm = {
       branches.push(bolt(p.x, p.y, p.x + Math.cos(ang) * L * (Math.random() < .5 ? -1 : 1), p.y + Math.sin(ang) * L, 30, 2));
     }
     const pulses = [0]; if (Math.random() < .7) pulses.push(.07 + Math.random() * .06); if (Math.random() < .4 || o.big) pulses.push(.2 + Math.random() * .1);
-    this.bolts.push({ main, branches, born: this.t, pulses, ground, x: x0, power: o.big ? 1.25 : (ground ? 1 : .6) });
-    if (this.still) return;
+    const diffuse = !!cfg.thundersnow;
+    this.bolts.push({ main, branches, born: this.t, pulses, ground, x: x0, diffuse, power: (o.big ? 1.25 : (ground ? 1 : .6)) * (diffuse ? .75 : 1) });
   },
   brightness(b){
     const age = this.t - b.born; let v = 0;
@@ -825,7 +1090,7 @@ const Storm = {
     return v;
   },
 
-  start(){ if (this.running || this.still) return; this.running = true; this.last = performance.now(); requestAnimationFrame(n => this.loop(n)) },
+  start(){ if (this.running || this.still || this.hold) return; this.running = true; this.last = performance.now(); requestAnimationFrame(n => this.loop(n)) },
   stop(){ this.running = false },
   loop(now){
     if (!this.running) return;
@@ -834,48 +1099,92 @@ const Storm = {
     requestAnimationFrame(n => this.loop(n));
   },
   frame(dt){
-    const x = this.x, w = this.w, h = this.h, C = this.col, cfg = this.cfg();
-    this.t += dt;
-    // wind drifts with occasional gusts
+    const x = this.x, w = this.w, h = this.h, C = this.col, cfg = this.cfg(), t = (this.t += dt);
+    // wind drifts with occasional gusts (negative = blowing left)
     if (Math.random() < dt * .25) this.gust = (Math.random() - .3) * cfg.wind * 1.6;
     this.gust *= Math.pow(.6, dt);
     this.wind += ((-cfg.wind + this.gust) - this.wind) * Math.min(1, dt * .8);
-    // lightning schedule
-    if (cfg.light && this.t > this.nextStrike) { this.strike(); this.nextStrike = this.t + (3 + Math.random() * 9) / cfg.light }
-    this.bolts = this.bolts.filter(b => this.t - b.born < 1.2);
+    if (cfg.light && t > this.nextStrike) { this.strike(); this.nextStrike = t + (3 + Math.random() * 9) / cfg.light }
+    this.bolts = this.bolts.filter(b => t - b.born < 1.2);
     let flash = 0, fx = w / 2;
     for (const b of this.bolts) { const v = this.brightness(b) * b.power; if (v > flash) { flash = v; fx = b.x } }
     this.flash = flash;
     document.documentElement.style.setProperty("--flash", flash > .02 ? Math.min(1, flash).toFixed(3) : "0");
 
     x.clearRect(0, 0, w, h);
-    // sky glow during flash
+    if (this.nebula) { x.globalAlpha = .9 + Math.sin(t * .2) * .1; x.drawImage(this.nebula, 0, 0, w, h); x.globalAlpha = 1 }
     if (flash > .02) {
       const g = x.createRadialGradient(fx, h * .15, 0, fx, h * .15, Math.max(w, h) * .9);
       g.addColorStop(0, `rgba(${C.glow},${.24 * flash})`); g.addColorStop(1, `rgba(${C.glow},0)`);
       x.fillStyle = g; x.fillRect(0, 0, w, h);
     }
+    // stars
+    const boost = cfg.auroraBoost || 1;
+    const aurora = Math.max(this.auroraTheme, cfg.auroraBoost ? 1 : 0) * (cfg.aurora ?? (cfg.rain ? .35 : 1)) * boost;
+    const starA = Math.max(Math.min(1, aurora), cfg.stars ? 1 : 0);
+    if (starA > .02) {
+      x.fillStyle = `rgba(${cfg.stars ? "255,255,255" : C.snow},1)`;
+      for (const s of this.stars) { x.globalAlpha = starA * (.4 + .35 * Math.sin(t * s.sp + s.ph)); x.fillRect(s.x, s.y, s.r, s.r) }
+      x.globalAlpha = 1;
+    }
+    // northern lights; in a solar storm: more ribbons, faster, taller, colours cycling
+    if (aurora > .02) {
+      const a = this.aur, g = a.getContext("2d"), W = a.width, H = a.height, ribbons = boost > 1 ? 6 : 3, sp = boost > 1 ? 2.2 : 1;
+      g.clearRect(0, 0, W, H); g.globalCompositeOperation = "lighter"; g.lineCap = "round";
+      const cols = [C.auroraA, C.auroraB, "255,90,200"];
+      for (let k = 0; k < ribbons; k++) {
+        const rgb = cols[(k + Math.floor(t * (boost > 1 ? .25 : 0))) % (boost > 1 ? 3 : 2)];
+        for (let pass = 0; pass < 4; pass++) {
+          g.strokeStyle = `rgba(${rgb},${(.16 - pass * .035) * Math.min(1.15, aurora)})`; g.lineWidth = (7 - pass) * (boost > 1 ? 1.5 : 1);
+          g.beginPath();
+          for (let i = 0; i <= 48; i++) {
+            const px = i / 48 * W;
+            const py = H * (.13 + k * (boost > 1 ? .085 : .07)) + Math.sin(px * .045 + t * .22 * sp + k * 1.7) * H * .05 * sp + Math.sin(px * .11 - t * .37 * sp + k) * H * .02 + pass * 4;
+            i ? g.lineTo(px, py) : g.moveTo(px, py);
+          }
+          g.stroke();
+        }
+      }
+      x.save(); x.globalCompositeOperation = "lighter"; x.drawImage(a, 0, 0, w, h); x.restore();
+    }
+    // the sun, dimmed by dust
+    if (cfg.sun) {
+      const sx = w * .74, sy = h * .2, r = Math.min(w, h) * .06;
+      const g = x.createRadialGradient(sx, sy, 0, sx, sy, r * 5);
+      g.addColorStop(0, `rgba(${C.sun},.55)`); g.addColorStop(.2, `rgba(${C.sun},.35)`); g.addColorStop(1, `rgba(${C.sun},0)`);
+      x.fillStyle = g; x.fillRect(sx - r * 5, sy - r * 5, r * 10, r * 10);
+      x.fillStyle = `rgba(${C.sun},.6)`; x.beginPath(); x.arc(sx, sy, r, 0, 7); x.fill();
+    }
+    // volcano: red glow along the horizon, breathing
+    if (cfg.lava) {
+      const g = x.createLinearGradient(0, h, 0, h * .45);
+      g.addColorStop(0, `rgba(${C.ember},${.42 + Math.sin(t * .7) * .08})`); g.addColorStop(1, `rgba(${C.ember},0)`);
+      x.fillStyle = g; x.fillRect(0, h * .45, w, h * .55);
+    }
+    if (this.city) x.drawImage(this.city, 0, 0, w, h);
+
+    const cloudK = cfg.clouds ?? 1, dir = Math.sign(this.wind) || -1;
     const drawClouds = layer => {
+      if (!cloudK) return;
       for (const c of this.clouds) {
         if (c.d !== layer) continue;
-        c.x += (c.v * c.d + this.wind * -30 * c.d) * dt;
+        c.x += (c.v * c.d * dir + this.wind * 30 * c.d) * dt;
         const S = this.sprites[c.sp], cw = S.W * c.s, ch = S.H * c.s;
         if (c.x > w + 60) c.x = -cw - 60; if (c.x < -cw - 80) c.x = w + 40;
-        const px = c.x - this.mx * 40 * c.d;
-        x.globalAlpha = c.a; x.drawImage(S.dark, px, c.y, cw, ch);
+        const px = c.x - this.mx * 40 * Math.min(1, c.d);
+        x.globalAlpha = c.a * cloudK; x.drawImage(S.dark, px, c.y, cw, ch);
         if (flash > .02) {
           const near = 1 - Math.min(1, Math.abs(px + cw / 2 - fx) / (w * .55));
-          x.globalAlpha = Math.min(1, flash * (.25 + near * .9)) * c.a; x.drawImage(S.lit, px, c.y, cw, ch);
+          x.globalAlpha = Math.min(1, flash * (.25 + near * .9)) * c.a * cloudK; x.drawImage(S.lit, px, c.y, cw, ch);
         }
       }
       x.globalAlpha = 1;
     };
     drawClouds(.35); drawClouds(.65);
-    // bolts sit between the cloud layers
     if (this.bolts.length) {
       x.save(); x.globalCompositeOperation = "lighter"; x.lineJoin = "round"; x.lineCap = "round";
       for (const b of this.bolts) {
-        const v = this.brightness(b) * b.power; if (v < .01) continue;
+        const v = this.brightness(b) * b.power; if (v < .01 || b.diffuse) continue;
         const path = (pts, lw, a, rgb) => { x.strokeStyle = `rgba(${rgb},${a})`; x.lineWidth = lw; x.beginPath(); x.moveTo(pts[0].x, pts[0].y); for (const p of pts) x.lineTo(p.x, p.y); x.stroke() };
         x.shadowColor = `rgba(${C.glow},${v})`; x.shadowBlur = 28;
         path(b.main, 9, .16 * v, C.glow);
@@ -886,8 +1195,33 @@ const Storm = {
       }
       x.restore();
     }
+    if (cfg.tornado) this.drawTornado(dt, flash);
     drawClouds(1);
-    // rain
+    // shooting stars
+    if (cfg.meteors) {
+      if (t > this.nextMeteor) {
+        const n = Math.random() < .15 ? 3 : 1;
+        for (let i = 0; i < n; i++) {
+          const big = Math.random() < .12, ang = Math.PI * (.62 + Math.random() * .16), s = (big ? 380 : 480) + Math.random() * 380;
+          this.meteors.push({ x: w * (.15 + Math.random() * 1), y: -20 + Math.random() * h * .35, vx: Math.cos(ang) * s, vy: Math.sin(ang) * s, len: big ? 300 : 140 + Math.random() * 140, life: 0, max: 1.3 + Math.random() * 1.1, big });
+        }
+        this.nextMeteor = t + .7 + Math.random() * 2.6;
+      }
+      x.save(); x.globalCompositeOperation = "lighter"; x.lineCap = "round";
+      this.meteors = this.meteors.filter(m => (m.life += dt) < m.max);
+      for (const m of this.meteors) {
+        m.x += m.vx * dt; m.y += m.vy * dt;
+        const k = Math.min(1, m.life * 4, (m.max - m.life) * 3), n = Math.hypot(m.vx, m.vy), tx = m.x - m.vx / n * m.len, ty = m.y - m.vy / n * m.len;
+        const g = x.createLinearGradient(m.x, m.y, tx, ty);
+        g.addColorStop(0, `rgba(255,255,255,${k})`); g.addColorStop(.25, `rgba(${C.glow},${.55 * k})`); g.addColorStop(1, `rgba(${C.glow},0)`);
+        x.strokeStyle = g; x.lineWidth = m.big ? 4 : 2; x.beginPath(); x.moveTo(m.x, m.y); x.lineTo(tx, ty); x.stroke();
+        const hg = x.createRadialGradient(m.x, m.y, 0, m.x, m.y, m.big ? 26 : 12);
+        hg.addColorStop(0, `rgba(255,255,255,${k})`); hg.addColorStop(1, `rgba(${C.glow},0)`);
+        x.fillStyle = hg; x.beginPath(); x.arc(m.x, m.y, m.big ? 26 : 12, 0, 7); x.fill();
+      }
+      x.restore();
+    }
+    // rain / sand
     if (this.drops.length) {
       const wind = this.wind;
       for (let bucket = 0; bucket < 3; bucket++) {
@@ -896,12 +1230,13 @@ const Storm = {
         x.lineWidth = .7 + bucket * .45; x.beginPath();
         for (const d of this.drops) {
           if (d.z < lo || d.z >= hi) continue;
-          const vx = wind * d.v, vy = d.v;
+          const vx = wind * d.v * (cfg.dust ? .55 : 1), vy = d.v * (cfg.dust ? .35 : 1);
           if (dt) { d.x += vx * dt; d.y += vy * dt }
           const k = d.len / Math.hypot(vx, vy);
           x.moveTo(d.x, d.y); x.lineTo(d.x - vx * k, d.y - vy * k);
           if (d.y > h + 10) {
-            if (d.z > .75 && Math.random() < .35) for (let i = 0; i < 2; i++) this.splashes.push({ x: d.x, y: h - 2, vx: (Math.random() - .5) * 90, vy: -60 - Math.random() * 90, life: .35 });
+            if (!cfg.dust && d.z > .75 && Math.random() < .35) for (let i = 0; i < 2; i++) this.splashes.push({ x: d.x, y: h - 2, vx: (Math.random() - .5) * 90, vy: -60 - Math.random() * 90, life: .35 });
+            if (cfg.ripples && Math.random() < .08) this.ripples.push({ x: d.x, y: h - 8 - Math.random() * 40, r: 0, life: 0 });
             Object.assign(d, this.drop(false));
           }
           if (d.x > w + 220) d.x -= w + 400; else if (d.x < -220) d.x += w + 400;
@@ -912,10 +1247,148 @@ const Storm = {
       this.splashes = this.splashes.filter(s => (s.life -= dt) > 0);
       for (const s of this.splashes) { s.vy += 420 * dt; s.x += s.vx * dt; s.y += s.vy * dt; x.fillRect(s.x, s.y, 1.6, 1.6) }
     }
-    // full-screen flash
+    // puddle ripples
+    if (this.ripples.length) {
+      x.lineWidth = 1;
+      this.ripples = this.ripples.filter(r => (r.life += dt) < .9);
+      for (const r of this.ripples) { r.r += 46 * dt; x.strokeStyle = `rgba(${C.rain},${.4 * (1 - r.life / .9)})`; x.beginPath(); x.ellipse(r.x, r.y, r.r, r.r * .22, 0, 0, 7); x.stroke() }
+    }
+    // the low dust wall rolls through in front of everything
+    drawClouds(1.4);
+    if (cfg.haze) { x.fillStyle = `rgba(${C.haze},${Math.min(.6, cfg.haze + this.gust * .25 + Math.sin(t * .4) * .04)})`; x.fillRect(0, 0, w, h) }
+    // embers rising from the volcano
+    if (cfg.embers) {
+      if (dt) for (let i = 0; i < 30 * dt * cfg.embers; i++) if (Math.random() < .9) this.embers.push({ x: Math.random() * w, y: h + 10, vy: -(40 + Math.random() * 110), ph: Math.random() * 6.3, r: .8 + Math.random() * 2, life: 0, max: 3 + Math.random() * 5 });
+      x.save(); x.globalCompositeOperation = "lighter";
+      this.embers = this.embers.filter(e => (e.life += dt) < e.max && e.y > -20);
+      for (const e of this.embers) {
+        e.y += e.vy * dt; const ex = e.x + Math.sin(t * 1.3 + e.ph) * 18, a = Math.min(1, e.life, (e.max - e.life)) * (.6 + .4 * Math.sin(t * 9 + e.ph));
+        x.fillStyle = `rgba(${C.ember},${.18 * a})`; x.beginPath(); x.arc(ex, e.y, e.r * 4, 0, 7); x.fill();
+        x.fillStyle = `rgba(255,220,160,${a})`; x.beginPath(); x.arc(ex, e.y, e.r, 0, 7); x.fill();
+      }
+      x.restore();
+    }
+    // snow / ash: sways, rides the wind, scatters from the cursor, piles up at the bottom
+    const D = this.drift, cols = D.length, maxDepth = (cfg.snow || 0) > 1.5 ? 80 : 46;
+    if (this.flakes.length) {
+      const R = 120, px = this.px, py = this.py, lift = 1 + flash * 1.4;
+      for (let bucket = 0; bucket < 3; bucket++) {
+        const lo = .2 + bucket * .27, hi = bucket === 2 ? 1.01 : lo + .27;
+        x.fillStyle = `rgba(${C.snow},${Math.min(1, (.45 + bucket * .22) * lift)})`;
+        x.beginPath();
+        for (const f of this.flakes) {
+          if (f.z < lo || f.z >= hi) continue;
+          if (dt) {
+            f.y += f.vy * dt;
+            f.bx += this.wind * 210 * f.z * dt * (cfg.snow > 1.5 ? 1.6 : 1);
+            const fx = f.bx + Math.sin(t * f.sw + f.ph) * f.amp;
+            const dx = fx - px, dy = f.y - py, d2 = dx * dx + dy * dy;
+            if (d2 < R * R) { const d = Math.sqrt(d2) || 1, push = (R - d) / R; f.bx += dx / d * push * 260 * dt; f.y += dy / d * push * 60 * dt }
+          }
+          const fx = f.bx + Math.sin(t * f.sw + f.ph) * f.amp;
+          const col = Math.max(0, Math.min(cols - 1, Math.round(fx / 6)));
+          if (f.y > h - D[col]) {
+            if (fx > 0 && fx < w) { const k = cfg.snow > 1.5 ? 1.2 : 1.6; D[col] = Math.min(maxDepth, D[col] + f.r * k); if (col > 0) D[col - 1] = Math.min(maxDepth, D[col - 1] + f.r * k * .4); if (col < cols - 1) D[col + 1] = Math.min(maxDepth, D[col + 1] + f.r * k * .4) }
+            Object.assign(f, this.flake(false)); continue;
+          }
+          if (f.bx > w + 180) f.bx -= w + 330; else if (f.bx < -180) f.bx += w + 330;
+          x.moveTo(fx + f.r, f.y); x.arc(fx, f.y, f.r, 0, Math.PI * 2);
+        }
+        x.fill();
+        if (this.snowEdge && bucket) { x.strokeStyle = `rgba(60,80,110,${this.snowEdge})`; x.lineWidth = .6; x.stroke() }
+      }
+    }
+    let deepest = 0;
+    for (let i = 0; i < cols; i++) {
+      if (!cfg.snow && D[i] > 0) D[i] = Math.max(0, D[i] - dt * 6);
+      if (dt && i > 0 && i < cols - 1) D[i] = D[i] * .96 + (D[i - 1] + D[i + 1]) * .02;
+      if (D[i] > deepest) deepest = D[i];
+    }
+    if (deepest > .4) {
+      x.beginPath(); x.moveTo(0, h);
+      for (let i = 0; i < cols; i++) x.lineTo(i * 6, h - D[i] - Math.sin(i * .9) * Math.min(1.5, D[i] * .08));
+      x.lineTo(w, h); x.closePath();
+      const gr = x.createLinearGradient(0, h - deepest, 0, h);
+      gr.addColorStop(0, `rgba(${C.snow},.97)`); gr.addColorStop(1, `rgba(${cfg.ashFall ? C.cloud : C.lit},.8)`);
+      x.fillStyle = gr; x.fill();
+      x.strokeStyle = `rgba(${this.snowEdge ? "70,90,120" : C.glow},${.35 + flash * .5})`; x.lineWidth = 1.2; x.stroke();
+    }
+    // raindrops on the glass, sliding down and leaving trails
+    if (cfg.glass) {
+      for (const g of this.glass) {
+        if (dt) { if (g.wait > 0) g.wait -= dt; else { g.vy = Math.min(220, g.vy + 140 * dt * (g.r / 4)); g.y += g.vy * dt; g.trail = Math.min(g.trail + g.vy * dt, 160) } }
+        if (g.y > h + 20) Object.assign(g, this.glassDrop(false), { wait: Math.random() * 3 });
+        if (g.trail > 2) { x.strokeStyle = "rgba(255,255,255,.07)"; x.lineWidth = g.r * .7; x.beginPath(); x.moveTo(g.x, g.y - g.trail); x.lineTo(g.x, g.y); x.stroke() }
+        x.fillStyle = "rgba(255,255,255,.1)"; x.beginPath(); x.arc(g.x, g.y, g.r, 0, 7); x.fill();
+        x.strokeStyle = "rgba(0,0,0,.25)"; x.lineWidth = .8; x.stroke();
+        x.fillStyle = "rgba(255,255,255,.5)"; x.fillRect(g.x - g.r * .35, g.y - g.r * .45, g.r * .3, g.r * .3);
+      }
+      for (const b of this.bokeh) { x.globalAlpha = .1 + .08 * Math.sin(t * .8 + b.ph); x.fillStyle = `rgba(${b.c},1)`; x.beginPath(); x.arc(b.x, b.y, b.r, 0, 7); x.fill() }
+      x.globalAlpha = 1;
+    }
+    // wish sparkles
+    if (this.sparks.length) {
+      x.save(); x.globalCompositeOperation = "lighter";
+      this.sparks = this.sparks.filter(s => (s.life -= dt) > 0);
+      for (const s of this.sparks) { s.x += s.vx * dt; s.y += s.vy * dt; s.vx *= .96; s.vy *= .96; x.fillStyle = `rgba(255,240,200,${Math.min(1, s.life * 2)})`; x.fillRect(s.x, s.y, 2.2, 2.2) }
+      x.restore();
+    }
     if (flash > .02) { x.fillStyle = `rgba(${C.bolt},${Math.min(.13, flash * .1)})`; x.fillRect(0, 0, w, h) }
+    // solar storm: the interference glitches the sky (and, briefly, the page)
+    if (cfg.glitch && dt && t > this.nextGlitch) {
+      this.nextGlitch = t + 5 + Math.random() * 7; this.glitchUntil = t + .22;
+      document.documentElement.classList.add("glitch"); setTimeout(() => document.documentElement.classList.remove("glitch"), 220);
+    }
+    if (cfg.glitch && t < (this.glitchUntil || 0)) {
+      for (let i = 0; i < 5; i++) { const y = Math.random() * h, bh = 6 + Math.random() * 30, sh = (Math.random() - .5) * 40; x.drawImage(this.c, 0, y * this.dpr, w * this.dpr, bh * this.dpr, sh, y, w, bh) }
+    }
+  },
+
+  // A twister: soft rotating funnel, debris orbiting it, and a dust cloud whenever it touches down.
+  drawTornado(dt, flash){
+    const x = this.x, w = this.w, h = this.h, C = this.col, t = this.t;
+    const cx = w * .66 + Math.sin(t * .07) * w * .18, top = h * .2;
+    const cyc = (Math.sin(t * .12 - 1) + 1) / 2, touch = Math.min(1, Math.max(0, (cyc - .25) / .5));
+    const bottom = h * (.64 + .33 * touch);
+    const at = s => ({ y: top + (bottom - top) * s, r: 115 * Math.pow(1 - s, 2.1) + 9 + 6 * touch, off: Math.sin(s * 3.2 - t * 1.1) * 30 * s + Math.sin(s * 7 + t * 2) * 6 * s });
+    // funnel colour: the cloud colour lifted toward the lit colour so it reads against a dark sky
+    const fc = C.cloud.split(",").map((v, i) => Math.round(+v + (C.lit.split(",")[i] - v) * .3)).join(",");
+    // wall cloud the funnel hangs from
+    const S = this.sprites[2];
+    if (S) { x.globalAlpha = .95; x.drawImage(S.dark, cx - S.W * .9, top - S.H * .95, S.W * 1.8, S.H * 1.3); x.globalAlpha = 1 }
+    // funnel body
+    for (let i = 0; i <= 50; i++) {
+      const s = i / 50, p = at(s);
+      x.save(); x.translate(cx + p.off, p.y); x.scale(1, .3);
+      const g = x.createRadialGradient(0, 0, 0, 0, 0, p.r);
+      g.addColorStop(0, `rgba(${fc},${.62 + s * .3})`); g.addColorStop(.65, `rgba(${fc},${.4 + s * .25})`); g.addColorStop(1, `rgba(${fc},0)`);
+      x.fillStyle = g; x.beginPath(); x.arc(0, 0, p.r, 0, 7); x.fill();
+      if (flash > .02) { x.fillStyle = `rgba(${C.lit},${flash * .15})`; x.beginPath(); x.arc(0, 0, p.r * .8, 0, 7); x.fill() }
+      x.restore();
+    }
+    // debris orbiting the funnel
+    if (this.torP.length < 240) for (let i = 0; i < 240; i++) this.torP.push({ s: Math.random(), a: Math.random() * 6.3, sp: 2 + Math.random() * 3, sz: .8 + Math.random() * 1.8 });
+    for (const q of this.torP) {
+      const p = at(q.s); q.a += q.sp * dt * (1 + (1 - q.s) * .5) * (60 / (p.r + 20));
+      const front = Math.sin(q.a) > 0, px = cx + p.off + Math.cos(q.a) * p.r * 1.05, py = p.y + Math.sin(q.a) * p.r * .3;
+      x.fillStyle = `rgba(${C.rain},${front ? .55 : .2})`; x.fillRect(px, py, q.sz * 1.8, q.sz);
+    }
+    // touchdown: debris thrown out, dust puff
+    if (touch > .3) {
+      if (dt) for (let i = 0; i < 40 * dt * touch; i++) this.debris.push({ x: cx + at(1).off, y: bottom, vx: (Math.random() - .5) * 320, vy: -60 - Math.random() * 180, life: 0, max: 1 + Math.random() });
+      const g = x.createRadialGradient(cx + at(1).off, bottom, 0, cx + at(1).off, bottom, 160);
+      g.addColorStop(0, `rgba(${C.cloud},${.55 * touch})`); g.addColorStop(1, `rgba(${C.cloud},0)`);
+      x.fillStyle = g; x.fillRect(cx - 200, bottom - 160, 400, 200);
+    }
+    this.debris = this.debris.filter(d => (d.life += dt) < d.max);
+    x.fillStyle = `rgba(${C.rain},.6)`;
+    for (const d of this.debris) { d.vy += 260 * dt; d.x += d.vx * dt; d.y += d.vy * dt; x.fillRect(d.x, d.y, 2, 2) }
   }
 };
+function distToSeg(px, py, ax, ay, bx, by){
+  const dx = bx - ax, dy = by - ay, l = dx * dx + dy * dy || 1, k = Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / l));
+  return Math.hypot(px - ax - k * dx, py - ay - k * dy);
+}
 // jagged bolt via midpoint displacement
 function bolt(x1, y1, x2, y2, disp, minLen){
   let pts = [{ x: x1, y: y1 }, { x: x2, y: y2 }];
@@ -939,25 +1412,92 @@ const app = $("#app");
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const BOLT = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4 14h7l-1.5 8L19 10h-7z"/></svg>`;
 const day = ts => new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-const THEMES = { thunderhead: "Thunderhead", overcast: "Overcast", supercell: "Supercell" };
+const THEMES = { thunderhead: "Thunderhead", overcast: "Overcast", supercell: "Supercell", polar: "Polar Night", dune: "Dune", inferno: "Inferno", neon: "Neon", cosmos: "Cosmos" };
+const THEME_SWATCH = {
+  auto: "conic-gradient(from 200deg,#7cc4ff,#c4f26b,#ffb45e,#ff7a3d,#ff5ccf,#b89dff,#5affb4,#7cc4ff)",
+  thunderhead: "linear-gradient(160deg,#04060b,#1a2336 70%,#7cc4ff)", overcast: "linear-gradient(160deg,#aeb8c6,#eef1f5 70%,#2c55d6)",
+  supercell: "linear-gradient(160deg,#020604,#25351f 70%,#c4f26b)", polar: "linear-gradient(160deg,#02040c,#09132e 45%,#5affb4 75%,#a06eff)",
+  dune: "linear-gradient(160deg,#170e06,#5e3b1d 50%,#ffb45e)", inferno: "linear-gradient(160deg,#040203,#3e1610 55%,#ff7a3d)",
+  neon: "linear-gradient(160deg,#04020d,#3a1240 50%,#ff5ccf 80%,#28dcff)", cosmos: "linear-gradient(160deg,#010007,#120a2e 50%,#b89dff 80%,#28c8dc)"
+};
+const WX_ICON = {
+  Rain: '<path d="M17.5 17H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19 9a4 4 0 0 1-1.5 8z"/><path d="m13 13-2 4h3l-2 4"/>',
+  calm: '<path d="M17.5 17H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19 9a4 4 0 0 1-1.5 8z"/>',
+  Winter: '<path d="M12 2v20M4.9 4.9l14.2 14.2M2 12h20M4.9 19.1 19.1 4.9"/>',
+  sandstorm: '<path d="M3 8h11a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h8"/>',
+  tornado: '<path d="M21 4H3M18 8H6M19 12H9M16 16h-6M11 20H9"/>',
+  ash: '<path d="M12 3c1 3 4 4.5 4 8.5a4 4 0 0 1-8 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 0-7.5z"/>',
+  meteors: '<path d="M4 20 14 10M9 21l6-6M3 15l6-6"/><circle cx="17.5" cy="6.5" r="3"/>',
+  solar: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>'
+};
 
 function toast(msg){ const t = $("#toast"); t.innerHTML = BOLT + `<span>${esc(msg)}</span>`; t.classList.add("show"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("show"), 2600) }
 async function act(fn, ok){
   try { const r = await fn(); if (ok) toast(ok); return r }
   catch (e) { console.error(e); toast(e.message || "Something went wrong."); try { await Store.reload?.() } catch {} }
 }
+// Colours: "auto" follows the weather (each weather names its theme), or a theme can be locked.
+// Accounts made before this saved "thunderhead" by default; treat that as auto unless it was picked on purpose.
+function themeChoice(){
+  const th = Store.me()?.theme || LocalStore.settings().theme || "auto";
+  return THEMES[th] && !(th === "thunderhead" && !LocalStore.settings().themePicked) ? th : "auto";
+}
 function applyTheme(){
-  let th = Store.me()?.theme || LocalStore.settings().theme || "thunderhead";
-  if (!THEMES[th]) th = "thunderhead";
+  const choice = themeChoice(), th = choice === "auto" ? (Storm.cfg().theme || "thunderhead") : choice;
+  const changed = document.documentElement.dataset.theme !== th;
   document.documentElement.dataset.theme = th;
   document.querySelector('meta[name="theme-color"]').content = getComputedStyle(document.documentElement).getPropertyValue("--sky-1").trim();
-  if (Storm.c) Storm.readColors();
+  if (Storm.c) changed || !Storm.col ? Storm.readColors() : Storm.buildScene();
+}
+async function pickTheme(th){
+  LocalStore.setSetting("themePicked", th !== "auto");
+  await act(() => Store.setTheme(th));
+  applyTheme();
 }
 function wxButton(){
-  const L = Storm.cfg().label;
-  $("#wx").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 17H7a5 5 0 1 1 1-9.9A6 6 0 0 1 19 9a4 4 0 0 1-1.5 8z"/>${Storm.level === "calm" ? "" : '<path d="m13 13-2 4h3l-2 4"/>'}</svg><span>${L}</span>`;
-  $("#wx").setAttribute("aria-label", "Weather: " + L + ". Click to change.");
+  const c = Storm.cfg(), L = c.label;
+  $("#wx").innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${WX_ICON[Storm.level] || WX_ICON[c.group] || WX_ICON.Rain}</svg><span>${L}</span>`;
+  $("#wx").setAttribute("aria-label", "Weather: " + L + ". Open the forecast menu.");
+  $("#wx").setAttribute("aria-expanded", $("#wxmenu") ? "true" : "false");
 }
+// The forecast: every weather, grouped, with a line on what it does.
+const forecastOptions = () => ["Rain", "Winter", "Wild", "Space"].map(gname => `<div class="wxg"><div class="wxg-h">${gname}</div><div class="wxg-items">${
+  Storm.order.filter(k => Storm.levels[k].group === gname).map(k => `<button class="wxopt ${k === Storm.level ? "on" : ""}" data-wx="${k}"><b>${Storm.levels[k].label}</b><small>${Storm.levels[k].desc}</small></button>`).join("")
+}</div></div>`).join("");
+function setWeather(k){
+  Storm.setLevel(k); wxButton();
+  if (k === "meteors" && !LocalStore.settings().wishHint) { LocalStore.setSetting("wishHint", true); setTimeout(() => toast("Click a shooting star to make a wish"), 600) }
+}
+function closeForecast(){ $("#wxmenu")?.remove(); $("#wx").setAttribute("aria-expanded", "false"); document.removeEventListener("pointerdown", forecastOutside, true) }
+function forecastOutside(e){ if (!e.target.closest("#wxmenu,#wx")) closeForecast() }
+function openForecast(){
+  if ($("#wxmenu")) return closeForecast();
+  const m = document.createElement("div"); m.id = "wxmenu"; m.className = "wxmenu"; m.setAttribute("role", "dialog"); m.setAttribute("aria-label", "Forecast");
+  const render = () => {
+    const auto = themeChoice() === "auto";
+    m.innerHTML = forecastOptions() + `<div class="wxmenu-foot"><span>Colors: <b style="color:var(--text)">${auto ? "match the weather" : "locked to " + THEMES[themeChoice()]}</b></span>${auto ? `<a href="#/settings">Pick a color theme</a>` : `<button class="btn small" data-auto>Match the weather</button>`}</div>`;
+  };
+  render();
+  m.onclick = async e => {
+    const b = e.target.closest("[data-wx]");
+    if (b) { setWeather(b.dataset.wx); render(); if (location.hash === "#/settings") Views.settings() }
+    if (e.target.closest("[data-auto]")) { await pickTheme("auto"); render() }
+    if (e.target.closest("a")) closeForecast();
+  };
+  $(".tools").appendChild(m); wxButton();
+  document.addEventListener("pointerdown", forecastOutside, true);
+}
+// Meteor shower: a clicked shooting star grants a random well-loved film.
+Storm.onWish = async () => {
+  toast("Wish made…");
+  try {
+    let pick;
+    if (TMDBProvider.ready()) { const r = await TMDBProvider.get("/movie/top_rated", { page: 1 + Math.floor(Math.random() * 15) }); const d = r.results[Math.floor(Math.random() * r.results.length)]; pick = TMDBProvider.norm(d, "movie") }
+    else { const l = await TVmazeProvider.popular("tv"); pick = l[Math.floor(Math.random() * l.length)] }
+    toast("Wish granted: " + pick.title);
+    setTimeout(() => { location.hash = "#/title/" + encodeURIComponent(pick.id) }, 1100);
+  } catch { toast("The wish fizzled. Try another star.") }
+};
 
 const posterImg = t => t?.poster ? `<img loading="lazy" src="${esc(t.poster)}" alt="">` : `<div class="noimg">${esc(t?.title || "?")}</div>`;
 function card(t, rank){
@@ -1041,12 +1581,67 @@ function theater(t, season = 1, episode = 1){
   el.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
+// Posters for the free open-movie / public-domain list (used by the Free page).
+async function freeFilms(kind){ return (await Promise.all(OpenFilms.ids(kind).map(id => TMDBProvider.basic(id).catch(() => null)))).filter(Boolean) }
+
+/* ---------- genres + themed shelves ---------- */
+// TMDB genre IDs for films and for series (null = that genre doesn't exist for that type).
+const GENRES = [
+  { slug: "action", name: "Action", movie: 28, tv: 10759 },       { slug: "adventure", name: "Adventure", movie: 12, tv: 10759 },
+  { slug: "animation", name: "Animation", movie: 16, tv: 16 },     { slug: "comedy", name: "Comedy", movie: 35, tv: 35 },
+  { slug: "crime", name: "Crime", movie: 80, tv: 80 },             { slug: "documentary", name: "Documentary", movie: 99, tv: 99 },
+  { slug: "drama", name: "Drama", movie: 18, tv: 18 },             { slug: "family", name: "Family", movie: 10751, tv: 10751 },
+  { slug: "fantasy", name: "Fantasy", movie: 14, tv: 10765 },      { slug: "history", name: "History", movie: 36, tv: null },
+  { slug: "horror", name: "Horror", movie: 27, tv: null },         { slug: "music", name: "Music", movie: 10402, tv: null },
+  { slug: "mystery", name: "Mystery", movie: 9648, tv: 9648 },     { slug: "romance", name: "Romance", movie: 10749, tv: null },
+  { slug: "scifi", name: "Sci-Fi", movie: 878, tv: 10765 },        { slug: "thriller", name: "Thriller", movie: 53, tv: null },
+  { slug: "war", name: "War", movie: 10752, tv: 10768 },           { slug: "western", name: "Western", movie: 37, tv: 37 },
+  { slug: "reality", name: "Reality", movie: null, tv: 10764 },    { slug: "kids", name: "Kids", movie: null, tv: 10762 }
+];
+const genreBy = slug => GENRES.find(g => g.slug === slug);
+const byGenre = (slug, type = "movie", sort = "popular") => async () => (await TMDBProvider.discover(type, { with_genres: genreBy(slug)[type] }, 1, sort)).items;
+const byKeywords = kw => async () => (await TMDBProvider.discover("movie", { with_keywords: kw })).items;
+// Home-page rows, in order. `genre` adds a "See all" link to that genre page.
+const SHELVES = [
+  { title: "Into the storm", sub: "Twisters, hurricanes and disasters", fn: byKeywords("2213|2215|5096|12336") },
+  { title: "Now in theaters", fn: () => TMDBProvider.list("/movie/now_playing", "movie") },
+  { title: "Action", genre: "action", fn: byGenre("action") },
+  { title: "Comedy", genre: "comedy", fn: byGenre("comedy") },
+  { title: "Top rated of all time", fn: () => TMDBProvider.list("/movie/top_rated", "movie") },
+  { title: "Horror", genre: "horror", fn: byGenre("horror") },
+  { title: "Pulled off", sub: "Heists and capers", fn: byKeywords("10051|191845|250043") },
+  { title: "Sci-Fi", genre: "scifi", fn: byGenre("scifi") },
+  { title: "Time bends", sub: "Time travel", fn: byKeywords("4379") },
+  { title: "Animation", genre: "animation", fn: byGenre("animation") },
+  { title: "Crime series", genre: "crime", type: "tv", fn: byGenre("crime", "tv") },
+  { title: "True stories", sub: "Based on real events", fn: byKeywords("9672") },
+  { title: "Thriller", genre: "thriller", fn: byGenre("thriller") },
+  { title: "Romance", genre: "romance", fn: byGenre("romance") },
+  { title: "Coming soon", fn: () => TMDBProvider.list("/movie/upcoming", "movie") },
+  { title: "Documentary", genre: "documentary", fn: byGenre("documentary") }
+];
+// Load rows and genre-tile backdrops only as they scroll near the screen (keeps API calls low).
+function whenVisible(nodes, fn){
+  if (!("IntersectionObserver" in window)) return nodes.forEach(fn);
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { io.unobserve(e.target); fn(e.target) } }), { rootMargin: "400px 0px" });
+  nodes.forEach(n => io.observe(n));
+}
+const genreTiles = () => `<div class="genre-grid">${GENRES.map(g => `<a class="gtile" href="#/genre/${g.slug}" data-g="${g.slug}"><span>${g.name}</span></a>`).join("")}</div>`;
+function loadGenreArt(root){
+  const used = new Set();   // so no two tiles show the same film
+  whenVisible([...root.querySelectorAll(".gtile")], async el => {
+    const g = genreBy(el.dataset.g), type = g.movie ? "movie" : "tv";
+    try { const r = await TMDBProvider.get(`/discover/${type}`, { with_genres: g[type], sort_by: "popularity.desc", "vote_count.gte": 200, include_adult: "false" });
+      const pick = r.results.find(x => x.backdrop_path && !used.has(x.id)); if (pick) { used.add(pick.id); el.style.backgroundImage = `url('${TMDBProvider.img}w780${pick.backdrop_path}')` } } catch {}
+  });
+}
+
 const needLogin = () => { app.innerHTML = `<div class="panel narrow"><h1>Take shelter</h1><p class="muted">Sign in to keep a watchlist, a diary and collections that follow you to any device.</p><a class="btn primary" href="#/login">Sign in or join</a></div>` };
 
 function chrome(path){
   const u = Store.me();
   document.body.dataset.route = path;
-  const links = [["/", "Discover"], ["/free", "Free"], ["/watchlist", "Watchlist"], ["/diary", "Diary"], ["/collections", "Collections"], ["/friends", "Friends"], ["/settings", "Settings"]];
+  const links = [["/", "Discover"], ["/genre", "Genres"], ["/room", "Rain Room"], ["/watchlist", "Watchlist"], ["/diary", "Diary"], ["/collections", "Collections"], ["/friends", "Friends"], ["/settings", "Settings"]];
   $("#nav").innerHTML = links.map(([h, l]) => `<a href="#${h}" class="${path === h ? "on" : ""}">${l}</a>`).join("");
   $("#who").innerHTML = u ? `<a class="btn small" href="#/settings" title="Signed in">@${esc(u.username)}</a>` : `<a class="btn small primary" href="#/login">Sign in</a>`;
   wxButton();
@@ -1064,15 +1659,21 @@ const Views = {
         <form class="bigsearch" id="heroSearch" role="search"><input id="hq" placeholder="Search a film or series" aria-label="Search"><button class="btn primary">${BOLT}Search</button></form>
       </section>
       ${p === TVmazeProvider ? `<div class="note">Series only for now. Add a free TMDB key in <a href="#/settings">Settings</a> to bring in films, trailers and recommendations.</div>` : ""}
-      ${TMDBProvider.ready() ? `<section class="sec"><div class="sec-h"><h2>Free to watch</h2><a class="muted" style="font-size:13px" href="#/free">See all ${OpenFilms.ids().length} →</a></div><div id="fw">${skelRail()}</div></section>` : ""}
       <section class="sec"><div class="sec-h"><h2>Gathering strength</h2><small>Trending this week</small></div><div id="tr">${skelRail()}</div></section>
       ${p === TMDBProvider ? `<section class="sec"><div class="sec-h"><h2>Popular films</h2></div><div id="pm">${skelGrid(12)}</div></section>` : ""}
-      <section class="sec"><div class="sec-h"><h2>Popular series</h2></div><div id="pt">${skelGrid(12)}</div></section>`;
+      <section class="sec"><div class="sec-h"><h2>Popular series</h2></div><div id="pt">${skelGrid(12)}</div></section>
+      ${p === TMDBProvider ? `
+      <section class="sec" id="genres"><div class="sec-h"><h2>Browse by genre</h2><small>Pick a genre to explore</small></div>${genreTiles()}</section>
+      ${SHELVES.map((s, i) => `<section class="sec shelf" data-i="${i}"><div class="sec-h"><h2>${esc(s.title)}</h2>${s.genre ? `<a class="muted" style="font-size:13px" href="#/genre/${s.genre}${s.type === "tv" ? "/tv" : ""}">See all →</a>` : s.sub ? `<small>${esc(s.sub)}</small>` : ""}</div><div class="shelf-body">${skelRail()}</div></section>`).join("")}` : ""}`;
     $("#heroSearch").onsubmit = e => { e.preventDefault(); const q = $("#hq").value.trim(); if (q) { Storm.strike(); location.hash = "#/search/" + encodeURIComponent(q) } };
     const fill = async (sel, fn, r) => { const el = $(sel); if (!el) return; try { const list = await fn(); el.innerHTML = r ? rail(list, true) : grid(list.slice(0, 18)) } catch (e) { el.innerHTML = empty("Signal lost", esc(e.message)) } };
-    if ($("#fw")) {
-      freeFilms().then(list => { if ($("#fw")) $("#fw").innerHTML = rail(list); })
-        .catch(() => { if ($("#fw")) $("#fw").innerHTML = empty("Signal lost", "Free titles could not be loaded right now."); });
+    if (p === TMDBProvider) {
+      loadGenreArt(app);
+      whenVisible([...app.querySelectorAll(".shelf")], async sec => {
+        const body = sec.querySelector(".shelf-body");
+        try { const list = (await SHELVES[+sec.dataset.i].fn()).filter(t => t.poster); body.innerHTML = list.length ? rail(list.slice(0, 20)) : empty("Clear skies", "Nothing here right now.") }
+        catch (e) { body.innerHTML = empty("Signal lost", esc(e.message)) }
+      });
     }
     // Start each TMDB shelf independently so one slow endpoint cannot leave every
     // homepage rail stuck on skeleton placeholders.
@@ -1089,6 +1690,52 @@ const Views = {
       <section class="sec"><div class="sec-h"><h2>Classics</h2><small>Public domain · Internet Archive</small></div><div id="fc">${skelGrid(8)}</div></section>`;
     const [o, c] = await Promise.all([freeFilms("open"), freeFilms("classic")]);
     if ($("#fo")) { $("#fo").innerHTML = grid(o); $("#fc").innerHTML = grid(c) }
+  },
+
+  // #/room or #/room/<title id>: the Rain Room (full-screen scene, see section 5)
+  room(id){ app.innerHTML = ""; Room.open(id) },
+
+  // #/genre            -> all genres
+  // #/genre/horror     -> horror films;  #/genre/crime/tv -> crime series
+  async genre(arg = ""){
+    if (!TMDBProvider.ready()) { app.innerHTML = empty("Needs TMDB", `Add a TMDB key in <a href="#/settings">Settings</a>.`); return }
+    const [slug, typeArg] = arg.split("/"), g = genreBy(slug);
+    if (!g) { app.innerHTML = `<h1>Genres</h1>${genreTiles()}`; loadGenreArt(app); return }
+    let type = typeArg === "tv" || !g.movie ? "tv" : "movie", sort = "popular", page = 1, pages = 1;
+    app.innerHTML = `<p><a class="muted" href="#/genre">← All genres</a></p>
+      <h1>${esc(g.name)}</h1>
+      <div class="row" style="justify-content:space-between;margin-bottom:22px">
+        <div class="tabs" style="margin:0">${["movie", "tv"].map(k => `<button class="btn ${k === type ? "on" : ""}" data-type="${k}" ${g[k] ? "" : `disabled title="Not available for ${k === "movie" ? "films" : "series"}"`}>${k === "movie" ? "Films" : "Series"}</button>`).join("")}</div>
+        <div class="tabs" style="margin:0">${[["popular", "Popular"], ["top", "Top rated"], ["new", "Newest"]].map(([k, l]) => `<button class="btn small ${k === sort ? "on" : ""}" data-sort="${k}">${l}</button>`).join("")}</div>
+      </div>
+      <div id="gg">${skelGrid(18)}</div>
+      <div class="row" style="justify-content:center;margin-top:26px"><button class="btn" id="more" hidden>Load more</button></div>
+      <section class="sec"><div class="sec-h"><h2>Other genres</h2></div><div class="chips">${GENRES.filter(x => x !== g).map(x => `<a class="chip" style="text-decoration:none" href="#/genre/${x.slug}">${x.name}</a>`).join("")}</div></section>`;
+    const seen = new Set();
+    const load = async reset => {
+      if (reset) { page = 1; seen.clear(); $("#gg").innerHTML = skelGrid(18) }
+      $("#more").disabled = true;
+      try {
+        const r = await TMDBProvider.discover(type, { with_genres: g[type] }, page, sort);
+        pages = r.pages;
+        const items = r.items.filter(t => t.poster && !seen.has(t.id)); items.forEach(t => seen.add(t.id));
+        const html = items.map(t => card(t)).join("");
+        if (reset) $("#gg").innerHTML = html ? `<div class="grid">${html}</div>` : empty("Clear skies", "Nothing here yet.");
+        else $("#gg .grid")?.insertAdjacentHTML("beforeend", html);
+        $("#more").hidden = page >= pages; $("#more").disabled = false;
+      } catch (e) { $("#gg").innerHTML = empty("Signal lost", esc(e.message)) }
+    };
+    app.onclick = e => {
+      const b = e.target.closest("button"); if (!b || b.disabled) return;
+      if (b.dataset.type && b.dataset.type !== type) { type = b.dataset.type; history.replaceState(null, "", `#/genre/${slug}${type === "tv" ? "/tv" : ""}`); }
+      else if (b.dataset.sort) sort = b.dataset.sort;
+      else if (b.id === "more") { page++; return load(false) }
+      else return;
+      app.querySelectorAll("[data-type]").forEach(x => x.classList.toggle("on", x.dataset.type === type));
+      app.querySelectorAll("[data-sort]").forEach(x => x.classList.toggle("on", x.dataset.sort === sort));
+      load(true);
+    };
+    load(true);
   },
 
   async search(q){
@@ -1148,6 +1795,7 @@ const Views = {
       const selectedEpisode = Number(episodePicker?.value || 1);
       theater(t, selectedSeason, selectedEpisode);
     });
+    watchSpot(t);   // "This page / Rain Room" toggle
     if (!u) return;
     $("#bolts").onclick = async e => {
       const b = e.target.closest("button"); if (!b) return;
@@ -1272,15 +1920,14 @@ const Views = {
   },
 
   settings(){
-    const u = Store.me(), th = document.documentElement.dataset.theme;
-    const sw = { thunderhead: "linear-gradient(160deg,#04060b,#1a2336 70%,#7cc4ff)", overcast: "linear-gradient(160deg,#aeb8c6,#eef1f5 70%,#2c55d6)", supercell: "linear-gradient(160deg,#020604,#25351f 70%,#c4f26b)" };
+    const u = Store.me(), th = themeChoice();
     app.innerHTML = `<h1>Settings</h1>
-      <div class="panel" style="max-width:720px">
-        <div class="sec-h"><h2>Sky</h2></div>
-        <div class="themes">${Object.entries(THEMES).map(([k, l]) => `<button class="theme-card ${k === th ? "on" : ""}" data-th="${k}"><div class="sw" style="background:${sw[k]}"></div><div>${l}</div></button>`).join("")}</div>
+      <div class="panel" style="max-width:760px">
+        <div class="sec-h"><h2>Weather</h2><small>Saved on this device</small></div>
+        ${forecastOptions()}
 
-        <div class="sec-h" style="margin-top:30px"><h2>Weather</h2><small>Saved on this device</small></div>
-        <div class="row">${Storm.order.map(k => `<button class="btn ${k === Storm.level ? "on" : ""}" data-wx="${k}">${Storm.levels[k].label}</button>`).join("")}</div>
+        <div class="sec-h" style="margin-top:30px"><h2>Colors</h2><small>${th === "auto" ? "Following the weather" : "Locked"}</small></div>
+        <div class="themes">${[["auto", "Match the weather"], ...Object.entries(THEMES)].map(([k, l]) => `<button class="theme-card ${k === th ? "on" : ""}" data-th="${k}"><div class="sw" style="background:${THEME_SWATCH[k]}"></div><div>${l}</div></button>`).join("")}</div>
         ${Storm.still ? `<p class="muted" style="font-size:13px">Your device asks for reduced motion, so the sky stays still.</p>` : ""}
 
         <div class="sec-h" style="margin-top:30px"><h2>Film data</h2></div>
@@ -1294,8 +1941,8 @@ const Views = {
           <div class="row"><button class="btn" id="out">Sign out</button><button class="btn" id="exp">Download my data</button><label class="btn" style="margin:0;color:var(--text)">Import data<input type="file" id="imp" accept="application/json" hidden></label><button class="btn danger" id="del">Delete account</button></div>`
           : `<a class="btn primary" href="#/login">Sign in or join</a>`}
       </div>`;
-    app.querySelectorAll("[data-th]").forEach(b => b.onclick = async () => { document.documentElement.dataset.theme = b.dataset.th; await act(() => Store.setTheme(b.dataset.th)); applyTheme(); Views.settings() });
-    app.querySelectorAll("[data-wx]").forEach(b => b.onclick = () => { Storm.setLevel(b.dataset.wx); wxButton(); Views.settings() });
+    app.querySelectorAll("[data-th]").forEach(b => b.onclick = async () => { await pickTheme(b.dataset.th); Views.settings() });
+    app.querySelectorAll("[data-wx]").forEach(b => b.onclick = () => { setWeather(b.dataset.wx); Views.settings() });
     $("#saveKey").onclick = async () => {
       LocalStore.setSetting("tmdbKey", $("#key").value.trim()); memCache.clear(); try { sessionStorage.clear() } catch {}
       if (TMDBProvider.ready()) await act(() => TMDBProvider.get("/configuration"), "TMDB connected");
@@ -1310,6 +1957,491 @@ const Views = {
   }
 };
 
+/* =====================================================================
+   5. THE RAIN ROOM   (#/room   or   #/room/<title id>)
+   A candle-lit tower chamber on a stormy blood-moon night, in fine dark-
+   fantasy pixel art. The scene is painted in layers that drift at different
+   depths with the mouse, and a real player sits inside the CRT. The TV plays the free full
+   films (OpenFilms) and the trailer for anything else on the site.
+   ===================================================================== */
+const ROOM = { W: 1600, H: 900, tv: { x: 582.5, y: 342.5, w: 355, h: 200 } };
+let closeRoom = null;
+
+// "Watch on: This page / Rain Room" toggle beside a title's Play button (remembered on this device).
+function watchSpot(t){
+  const play = $("#play"); if (!play || $("#watchSpot")) return;
+  const spot = () => LocalStore.settings().watchSpot || "page";
+  play.insertAdjacentHTML("afterend", `<div class="seg" id="watchSpot" role="group" aria-label="Where to watch"><button type="button" data-spot="page">This page</button><button type="button" data-spot="room">Rain Room</button></div>`);
+  const sync = () => document.querySelectorAll("#watchSpot [data-spot]").forEach(b => { b.classList.toggle("on", b.dataset.spot === spot()); b.setAttribute("aria-pressed", b.dataset.spot === spot()) });
+  sync();
+  $("#watchSpot").onclick = e => { const b = e.target.closest("[data-spot]"); if (b) { LocalStore.setSetting("watchSpot", b.dataset.spot); sync() } };
+  // When "Rain Room" is picked, Play opens the room instead of the page player.
+  play.addEventListener("click", e => { if (spot() === "room") { e.stopImmediatePropagation(); location.hash = "#/room/" + encodeURIComponent(t.id) } }, true);
+}
+
+// The Rain Room uses the same Stellar TMDB player as the title page.
+async function roomSource(id){
+  const stream = Streams.find(id);
+  const prov = Providers.for(id);
+  let t = null; try { t = prov?.ready() ? await prov.details(id) : null } catch {}
+  return stream
+    ? { embed: stream.embed, kind: "Stellar", title: t?.title || "", tmdbId: stream.tmdbId }
+    : { none: true, title: t?.title || "" };
+}
+
+// ---------- pixel-art renderer ----------
+// The room is painted with ordinary canvas shapes at low resolution (1 art pixel = 2.5 screen px),
+// then snapped to a limited dark-fantasy palette with ordered (Bayer) dithering and scaled up with
+// crisp pixels. Things that move (rain, flames, steam, lightning) are drawn at the same low
+// resolution every frame so everything shares one pixel grid.
+const PX = 2.5, LW = 680, LH = 380, OX = 20, OY = 10;   // 20/10 px of overscan so parallax never shows an edge
+const PAL = ["07050d","0e0a18","161124","1f1833","2a2142","3a2d55","4e3d6b","2a0a14","4a0f1f","6e1428","962033","c22d3d","e0485a","ff7a7a","ffb3a7",
+  "3b1838","5a2350","7d3466","2c2f45","3e4360","565d7d","7a82a3","a3abc6","3a2414","5c3a1e","8a5a2b","c4843a","f2b45a","ffe08a","fff4cf",
+  "0f2a22","1d4a3a","2f7a5a","7fe0b0","d6ffe8","e8b9a0","b98270","d9d4e8","f2eefa","1a1326"].map(h => [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4), 16)]);
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const palCache = new Map();
+const clamp8 = v => v < 0 ? 0 : v > 255 ? 255 : v | 0;
+function nearestPal(r, g, b){
+  const k = (r >> 2) << 12 | (g >> 2) << 6 | (b >> 2); let v = palCache.get(k); if (v !== undefined) return v;
+  let best = 0, bd = 1e9;
+  for (let i = 0; i < PAL.length; i++) { const p = PAL[i], dr = r - p[0], dg = g - p[1], db = b - p[2], d = dr * dr * .3 + dg * dg * .59 + db * db * .11; if (d < bd) { bd = d; best = i } }
+  palCache.set(k, best); return best;
+}
+function pixelize(cv, dither = 26){
+  const g = cv.getContext("2d"), img = g.getImageData(0, 0, cv.width, cv.height), d = img.data, w = cv.width;
+  for (let i = 0, n = d.length; i < n; i += 4) {
+    if (d[i + 3] < 110) { d[i + 3] = 0; continue }
+    const p = i >> 2, x = p % w, y = (p / w) | 0, t = (BAYER[(y & 3) * 4 + (x & 3)] / 16 - .5) * dither;
+    const c = PAL[nearestPal(clamp8(d[i] + t), clamp8(d[i + 1] + t), clamp8(d[i + 2] + t))];
+    d[i] = c[0]; d[i + 1] = c[1]; d[i + 2] = c[2]; d[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0); return cv;
+}
+function lowCanvas(){ const c = document.createElement("canvas"); c.width = LW; c.height = LH; c.getContext("2d").setTransform(1, 0, 0, 1, OX, OY); return c }
+function noise2(seed){
+  const r = mulberry(seed), N = 64, grid = Array.from({ length: N * N }, () => r());
+  const v = (x, y) => grid[(((y % N) + N) % N) * N + (((x % N) + N) % N)];
+  return (x, y) => { const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi, u = xf * xf * (3 - 2 * xf), w = yf * yf * (3 - 2 * yf);
+    return (v(xi, yi) * (1 - u) + v(xi + 1, yi) * u) * (1 - w) + (v(xi, yi + 1) * (1 - u) + v(xi + 1, yi + 1) * u) * w };
+}
+function fbm(n, x, y, o = 4){ let s = 0, a = .5, f = 1, t = 0; for (let i = 0; i < o; i++) { s += a * n(x * f, y * f); t += a; a *= .5; f *= 2 } return s / t }
+const lerp = (a, b, t) => a + (b - a) * Math.max(0, Math.min(1, t));
+function rrect(g, x, y, w, h, r){ g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath() }
+// the gothic window (low-res coordinates)
+function archPath(g){ g.beginPath(); g.moveTo(150, 252); g.lineTo(150, 112); g.quadraticCurveTo(156, 32, 320, 12); g.quadraticCurveTo(484, 32, 490, 112); g.lineTo(490, 252); g.closePath() }
+const MOON = { x: 226, y: 76, r: 48 };
+
+// ---------- the sky: blood moon, crimson clouds, crags, a lake and a castle ----------
+function paintSky(){
+  const cv = lowCanvas(), g = cv.getContext("2d"), img = g.createImageData(LW, LH), d = img.data;
+  const n1 = noise2(3), n2 = noise2(9), n3 = noise2(21);
+  const stops = [[-10, [8, 6, 26]], [70, [26, 13, 44]], [140, [66, 18, 48]], [196, [132, 30, 50]], [214, [96, 20, 38]], [380, [30, 8, 20]]];
+  const sky = y => { for (let i = 1; i < stops.length; i++) if (y <= stops[i][0]) { const [y0, c0] = stops[i - 1], [y1, c1] = stops[i], t = (y - y0) / (y1 - y0); return c0.map((v, k) => lerp(v, c1[k], t)) } return stops.at(-1)[1] };
+  const ridgeFar = x => 172 - fbm(n2, x / 34, 1.3, 4) * 70;
+  const ridgeNear = x => 214 - fbm(n3, x / 22, 4.1, 4) * 44 - Math.max(0, 1 - (x - 150) / 70) * 96 - Math.max(0, 1 - Math.abs(x - 402) / 40) * 40 - Math.max(0, (x - 440) / 50) * 50;
+  for (let py = 0; py < LH; py++) for (let px = 0; px < LW; px++) {
+    const x = px - OX, y = py - OY, i = (py * LW + px) * 4;
+    let [R, G, B] = sky(y);
+    if (y < 160) { const hs = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453, fr = hs - Math.floor(hs); if (fr > .9962) { const b = 140 + (fr - .9962) * 30000; R = G = B = Math.min(255, b) } }
+    const dm = Math.hypot(x - MOON.x, y - MOON.y);
+    if (dm < MOON.r) {
+      const k = ((x - MOON.x) + (y - MOON.y)) / (MOON.r * 2.6) + .5, cr = fbm(n1, x / 8, y / 8, 4), dark = cr > .58 ? .66 : cr > .5 ? .83 : 1, limb = 1 - Math.pow(dm / MOON.r, 5) * .4;
+      R = lerp(255, 176, k) * dark * limb; G = lerp(150, 36, k) * dark * limb; B = lerp(138, 52, k) * dark * limb;
+    } else { const h = Math.exp(-(dm - MOON.r) / 20) * .6; R += (225 - R) * h; G += (58 - G) * h * .55; B += (70 - B) * h * .55 }
+    const cy = 136, cd = fbm(n2, x / 50, y / 10, 5) - Math.abs(y - cy) / 64;
+    if (cd > .34) { const above = fbm(n2, x / 50, (y - 3) / 10, 5) - Math.abs(y - 3 - cy) / 64 < .34, c = above ? [214, 62, 76] : cd > .46 ? [52, 12, 30] : [104, 22, 44], a = Math.min(1, (cd - .34) * 6);
+      R = lerp(R, c[0], a); G = lerp(G, c[1], a); B = lerp(B, c[2], a) }
+    const rf = ridgeFar(x);
+    if (y > rf && y < 214) { const sh = fbm(n3, x / 5, y / 5, 3); R = lerp(30, 58, sh); G = lerp(22, 40, sh); B = lerp(50, 88, sh); if (y < rf + 2) { R = 156; G = 42; B = 70 } }
+    if (y >= 214) { const refl = Math.exp(-Math.abs(x - MOON.x) / 16) * (fbm(n1, x / 2.5, y / .9, 2) > .5 ? 1 : .45), streak = fbm(n2, x / 14, y * 1.4, 2) > .62 ? .25 : 0;
+      R = lerp(34, 236, refl * .85 + streak); G = lerp(9, 80, refl * .6 + streak * .4); B = lerp(22, 86, refl * .6 + streak * .4) }
+    const rn = ridgeNear(x);
+    if (y > rn) { const sh = fbm(n1, x / 4, y / 4, 3); R = lerp(16, 38, sh); G = lerp(12, 28, sh); B = lerp(28, 56, sh); if (y < rn + 2) { R = 128; G = 32; B = 56 } }
+    d[i] = R; d[i + 1] = G; d[i + 2] = B; d[i + 3] = 255;
+  }
+  g.putImageData(img, 0, 0);
+  // the castle on the right crag
+  g.fillStyle = "#0e0a18";
+  g.fillRect(376, 128, 52, 40); g.fillRect(390, 54, 14, 110); g.fillRect(378, 92, 10, 60); g.fillRect(408, 102, 10, 50);
+  [[390, 54, 397, 24, 404, 54], [378, 92, 383, 72, 388, 92], [408, 102, 413, 84, 418, 102]].forEach(([a, b, c, dd, e, f]) => { g.beginPath(); g.moveTo(a, b); g.lineTo(c, dd); g.lineTo(e, f); g.fill() });
+  for (let x = 376; x < 428; x += 4) g.fillRect(x, 125, 2, 3);
+  g.fillStyle = "#6e1428"; g.fillRect(390, 56, 1, 106); g.fillRect(378, 94, 1, 56); g.fillRect(376, 130, 1, 36);
+  g.fillStyle = "#f2b45a"; [[396, 70], [396, 96], [399, 120], [382, 110], [412, 118], [392, 140], [404, 146]].forEach(([x, y]) => g.fillRect(x, y, 1, 2));
+  return pixelize(cv, 30);
+}
+
+// ---------- the chamber: stone walls, the arched window, curtains, shelf, cabinet and the CRT ----------
+const CANDLES = [[36, 52], [100, 52], [128, 203], [140, 197], [152, 203], [612, 214]];
+function paintRoom(){
+  const cv = lowCanvas(), g = cv.getContext("2d"), r = mulberry(17), n = noise2(41);
+  // stone blocks
+  g.fillStyle = "#0e0a18"; g.fillRect(-OX, -OY, LW, 274);
+  for (let y = -OY, row = 0; y < 264; y += 12, row++) for (let x = -OX - (row % 2) * 13; x < 680; x += 26) {
+    g.fillStyle = ["#1f1833", "#1a1326", "#2a2142", "#161124"][(r() * 4) | 0]; g.fillRect(x + 1, y + 1, 24, 10);
+    g.fillStyle = "rgba(255,255,255,.04)"; g.fillRect(x + 1, y + 1, 24, 1);
+  }
+  // floorboards
+  for (let y = 264, k = 0; y < 380; k++) { const h = 6 + k * 1.6; g.fillStyle = k % 2 ? "#3a2414" : "#2c1c10"; g.fillRect(-OX, y, LW, h); g.fillStyle = "#1a1008"; g.fillRect(-OX, y, LW, 1);
+    for (let x = -OX + ((k * 37) % 60); x < 680; x += 60 + k * 6) g.fillRect(x, y, 1, h); y += h }
+  g.fillStyle = "#1a1326"; g.fillRect(-OX, 262, LW, 3);
+  // the rug
+  g.beginPath(); g.moveTo(186, 300); g.lineTo(458, 300); g.lineTo(500, 352); g.lineTo(144, 352); g.closePath(); g.fillStyle = "#4a0f1f"; g.fill();
+  g.beginPath(); g.moveTo(196, 304); g.lineTo(448, 304); g.lineTo(484, 348); g.lineTo(160, 348); g.closePath(); g.strokeStyle = "#c22d3d"; g.lineWidth = 2; g.stroke();
+  g.beginPath(); g.moveTo(208, 310); g.lineTo(436, 310); g.lineTo(466, 342); g.lineTo(178, 342); g.closePath(); g.strokeStyle = "#2c2f45"; g.lineWidth = 3; g.stroke();
+  for (let i = 0; i < 9; i++) { const cx = 214 + i * 27, cy = 326; g.fillStyle = i % 2 ? "#962033" : "#3e4360"; g.beginPath(); g.moveTo(cx, cy - 6); g.lineTo(cx + 6, cy); g.lineTo(cx, cy + 6); g.lineTo(cx - 6, cy); g.fill() }
+  g.fillStyle = "#c4843a"; for (let x = 146; x < 500; x += 4) g.fillRect(x, 352, 1, 3);
+  // light: warm candles on the left, the TV's green glow, the red moon spilling in, dark corners
+  const glow = (x, y, rad, c, a) => { const gr = g.createRadialGradient(x, y, 0, x, y, rad); gr.addColorStop(0, `rgba(${c},${a})`); gr.addColorStop(1, `rgba(${c},0)`); g.fillStyle = gr; g.fillRect(-OX, -OY, LW, LH) };
+  glow(96, 120, 230, "242,180,90", .3); glow(140, 220, 140, "242,180,90", .25); glow(303, 200, 230, "127,224,176", .16); glow(320, 150, 300, "224,72,90", .12);
+  g.beginPath(); g.moveTo(186, 264); g.lineTo(476, 264); g.lineTo(430, 336); g.lineTo(146, 336); g.closePath(); g.fillStyle = "rgba(224,72,90,.1)"; g.fill();
+  const vg = g.createRadialGradient(320, 180, 160, 320, 180, 420); vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(0,0,0,.55)"); g.fillStyle = vg; g.fillRect(-OX, -OY, LW, LH);
+  // cut the window out so the sky shows through
+  g.save(); archPath(g); g.globalCompositeOperation = "destination-out"; g.fillStyle = "#000"; g.fill(); g.restore();
+  // window: stone surround, iron tracery, sill
+  archPath(g); g.strokeStyle = "#3e4360"; g.lineWidth = 10; g.stroke(); archPath(g); g.strokeStyle = "#565d7d"; g.lineWidth = 3; g.stroke();
+  g.fillStyle = "#565d7d"; g.fillRect(312, 2, 16, 12);
+  g.fillStyle = "#0e0a18"; g.fillRect(262, 40, 3, 212); g.fillRect(375, 40, 3, 212); g.fillRect(150, 120, 340, 3);
+  g.beginPath(); g.arc(320, 70, 26, Math.PI, 0); g.strokeStyle = "#0e0a18"; g.lineWidth = 3; g.stroke();
+  g.fillStyle = "#3e4360"; g.fillRect(138, 248, 364, 9); g.fillStyle = "#7a82a3"; g.fillRect(138, 248, 364, 2);
+  // velvet curtains, tied back
+  const curtain = (x0, dir) => {
+    g.beginPath(); g.moveTo(x0, 6); g.lineTo(x0 + 44 * dir, 6); g.quadraticCurveTo(x0 + 22 * dir, 120, x0 + 30 * dir, 168); g.quadraticCurveTo(x0 + 40 * dir, 220, x0 + 36 * dir, 262); g.lineTo(x0, 262); g.closePath();
+    const cg = g.createLinearGradient(x0, 0, x0 + 44 * dir, 0); cg.addColorStop(0, "#2a0a14"); cg.addColorStop(.6, "#6e1428"); cg.addColorStop(1, "#962033"); g.fillStyle = cg; g.fill();
+    g.strokeStyle = "#2a0a14"; g.lineWidth = 2; for (let k = 1; k < 4; k++) { g.beginPath(); g.moveTo(x0 + k * 10 * dir, 8); g.quadraticCurveTo(x0 + k * 7 * dir, 120, x0 + k * 8 * dir, 260); g.stroke() }
+    if (dir > 0) { g.fillStyle = "#c4843a"; g.fillRect(x0 + 18, 164, 16, 4) }   // tie-back (left curtain only; the right one sits behind her)
+  };
+  curtain(124, 1); curtain(516, -1);
+  g.fillStyle = "#8a5a2b"; g.fillRect(112, 3, 416, 4); g.fillStyle = "#c4843a"; g.fillRect(108, 2, 6, 6); g.fillRect(526, 2, 6, 6);
+  // bookshelf: books, potions, a skull, candles
+  g.fillStyle = "#2c1c10"; g.fillRect(12, 58, 108, 244); g.fillStyle = "#3a2414"; g.fillRect(12, 58, 108, 4); g.fillRect(12, 58, 4, 244); g.fillRect(116, 58, 4, 244);
+  const BOOK = ["#6e1428", "#2c2f45", "#1d4a3a", "#5a2350", "#5c3a1e", "#962033", "#3e4360", "#8a5a2b"];
+  for (let s = 0; s < 4; s++) {
+    const base = 116 + s * 54; g.fillStyle = "#3a2414"; g.fillRect(14, base, 104, 4);
+    let x = 18;
+    while (x < 112) {
+      if (r() < .14 && x < 100) { // potion or skull
+        if (s === 1 && x > 60 && !paintRoom.skull) { paintRoom.skull = 1; g.fillStyle = "#d9d4e8"; g.beginPath(); g.arc(x + 6, base - 9, 6, 0, 7); g.fill(); g.fillRect(x + 3, base - 6, 7, 6); g.fillStyle = "#0e0a18"; g.fillRect(x + 3, base - 10, 2, 2); g.fillRect(x + 7, base - 10, 2, 2); x += 14; continue }
+        const c = ["#7fe0b0", "#7d3466", "#e0485a"][(r() * 3) | 0]; g.fillStyle = "#a3abc6"; g.fillRect(x + 3, base - 18, 2, 4); g.fillStyle = c; g.beginPath(); g.arc(x + 4, base - 7, 5, 0, 7); g.fill(); g.fillStyle = "#f2eefa"; g.fillRect(x + 2, base - 9, 1, 2); x += 11; continue;
+      }
+      const w = 4 + (r() * 5) | 0, h = 26 + (r() * 18) | 0; g.fillStyle = BOOK[(r() * BOOK.length) | 0]; g.fillRect(x, base - h, w, h); g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(x, base - h, 1, h); g.fillStyle = "#c4843a"; g.fillRect(x, base - h + 5, w, 1); x += w + 1;
+    }
+  }
+  paintRoom.skull = 0;
+  // candles: on the shelf, a candelabra, and one on the bedside crate
+  g.fillStyle = "#fff4cf"; [[34, 52, 4, 8], [98, 52, 4, 8]].forEach(([x, y, w, h]) => g.fillRect(x, y, w, h));
+  g.fillStyle = "#8a5a2b"; g.fillRect(139, 206, 2, 92); g.fillRect(126, 207, 28, 2); g.fillRect(126, 203, 2, 5); g.fillRect(152, 203, 2, 5); g.fillRect(132, 296, 16, 3);
+  g.fillStyle = "#fff4cf"; g.fillRect(126, 197, 3, 6); g.fillRect(138, 191, 3, 7); g.fillRect(150, 197, 3, 6);
+  g.fillStyle = "#3a2414"; g.fillRect(598, 222, 26, 40); g.fillStyle = "#5c3a1e"; g.fillRect(598, 222, 26, 2); g.fillStyle = "#fff4cf"; g.fillRect(610, 214, 4, 8);
+  // cabinet
+  g.fillStyle = "#2c1c10"; g.fillRect(196, 236, 244, 60); g.fillStyle = "#5c3a1e"; g.fillRect(194, 234, 248, 4); g.fillStyle = "#1a1326"; g.fillRect(200, 244, 116, 46); g.fillRect(320, 244, 116, 46);
+  g.fillStyle = "#3a2414"; g.fillRect(203, 247, 110, 40); g.fillRect(323, 247, 110, 40); g.fillStyle = "#c4843a"; g.fillRect(308, 264, 3, 3); g.fillRect(325, 264, 3, 3);
+  g.fillStyle = "#1a1008"; g.fillRect(200, 296, 6, 10); g.fillRect(430, 296, 6, 10);
+  // the CRT: wooden cabinet, curved screen, brass knobs, rabbit ears
+  g.strokeStyle = "#a3abc6"; g.lineWidth = 1; g.beginPath(); g.moveTo(312, 126); g.lineTo(290, 86); g.moveTo(312, 126); g.lineTo(340, 84); g.stroke();
+  g.fillStyle = "#d9d4e8"; g.fillRect(289, 84, 3, 3); g.fillRect(339, 82, 3, 3); g.fillStyle = "#1a1326"; g.fillRect(300, 120, 24, 8);
+  rrect(g, 222, 126, 190, 114, 8); const tg = g.createLinearGradient(0, 126, 0, 240); tg.addColorStop(0, "#8a5a2b"); tg.addColorStop(1, "#3a2414"); g.fillStyle = tg; g.fill();
+  rrect(g, 222, 126, 190, 114, 8); g.strokeStyle = "#1a1008"; g.lineWidth = 2; g.stroke();
+  rrect(g, 228, 134, 152, 90, 10); g.fillStyle = "#07050d"; g.fill();
+  g.fillStyle = "#2c1c10"; g.fillRect(384, 136, 22, 98); g.fillStyle = "#c4843a"; g.beginPath(); g.arc(395, 152, 5, 0, 7); g.arc(395, 172, 5, 0, 7); g.fill();
+  g.fillStyle = "#f2b45a"; g.fillRect(394, 148, 2, 4); g.fillRect(396, 169, 2, 4);
+  g.fillStyle = "#1a1008"; for (let y = 186; y < 222; y += 3) g.fillRect(387, y, 16, 1);
+  g.fillStyle = "#e0485a"; g.fillRect(398, 228, 2, 2);
+  // the cat (body; its tail is animated)
+  g.fillStyle = "#0e0a18"; g.beginPath(); g.ellipse(422, 228, 13, 7, 0, 0, 7); g.fill(); g.beginPath(); g.arc(411, 225, 5, 0, 7); g.fill();
+  g.beginPath(); g.moveTo(407, 222); g.lineTo(408, 215); g.lineTo(411, 220); g.moveTo(412, 220); g.lineTo(415, 214); g.lineTo(416, 221); g.fill();
+  g.fillStyle = "#2f7a5a"; g.fillRect(407, 225, 2, 1);
+  return pixelize(cv, 22);
+}
+
+// ---------- the girl: silver hair, blanket, headphones, a steaming mug (4 sprite frames for a head-bob) ----------
+function paintGirl(f){
+  const cv = lowCanvas(), g = cv.getContext("2d"), hy = [0, 0, 1, 1][f], sw = [0, 1, 1, 0][f];
+  // daybed
+  g.fillStyle = "#2c1c10"; g.fillRect(466, 262, 180, 40); g.fillStyle = "#5c3a1e"; g.fillRect(466, 262, 180, 3);
+  g.fillStyle = "#3e4360"; g.fillRect(470, 246, 172, 18); g.fillStyle = "#565d7d"; g.fillRect(470, 246, 172, 2);
+  g.fillStyle = "#5a2350"; rrect(g, 588, 224, 44, 24, 7); g.fill(); g.fillStyle = "#7d3466"; rrect(g, 604, 220, 36, 22, 7); g.fill();
+  g.fillStyle = "#1a1008"; g.fillRect(468, 300, 6, 14); g.fillRect(638, 300, 6, 14);
+  // blanket wrapped around her
+  const by = 196 + hy;
+  g.beginPath(); g.moveTo(508, by); g.quadraticCurveTo(484, by + 32, 476, 262); g.lineTo(590, 262); g.quadraticCurveTo(574, by + 20, 534, by - 2); g.closePath();
+  const bg = g.createLinearGradient(476, 0, 590, 0); bg.addColorStop(0, "#3a2d55"); bg.addColorStop(1, "#1f1833"); g.fillStyle = bg; g.fill();
+  g.strokeStyle = "#161124"; g.lineWidth = 2; g.beginPath(); g.moveTo(522, by + 8); g.quadraticCurveTo(514, by + 40, 506, 258); g.moveTo(544, by + 10); g.quadraticCurveTo(552, by + 40, 564, 258); g.stroke();
+  g.strokeStyle = "#2f7a5a"; g.beginPath(); g.moveTo(507, by + 2); g.quadraticCurveTo(484, by + 32, 477, 260); g.stroke();
+  g.fillStyle = "#2a2142"; g.beginPath(); g.moveTo(560, 250); g.quadraticCurveTo(604, 238, 632, 262); g.lineTo(560, 264); g.fill();
+  // long silver hair down her back
+  g.beginPath(); g.moveTo(512, 148 + hy); g.quadraticCurveTo(540, 148 + hy, 538, 176 + hy); g.quadraticCurveTo(544 + sw, 214, 552 + sw, 240); g.lineTo(530 + sw, 242); g.quadraticCurveTo(522, 206, 516, 186 + hy); g.closePath();
+  const hg = g.createLinearGradient(0, 148, 0, 240); hg.addColorStop(0, "#5a2350"); hg.addColorStop(1, "#2a0a14"); g.fillStyle = hg; g.fill();
+  g.strokeStyle = "#7d3466"; g.lineWidth = 1; g.beginPath(); g.moveTo(530, 160 + hy); g.quadraticCurveTo(536 + sw, 200, 542 + sw, 232); g.moveTo(536, 170 + hy); g.quadraticCurveTo(544 + sw, 206, 548 + sw, 236); g.stroke();
+  g.strokeStyle = "#c22d3d"; g.beginPath(); g.moveTo(538, 168 + hy); g.quadraticCurveTo(545 + sw, 206, 551 + sw, 238); g.stroke();   // moonlight catching the edge
+  // face in profile, looking left at the TV
+  g.fillStyle = "#e8b9a0"; g.beginPath(); g.moveTo(512, 152 + hy); g.lineTo(506, 158 + hy); g.lineTo(504, 165 + hy); g.lineTo(501, 170 + hy); g.lineTo(504, 172 + hy); g.lineTo(504, 176 + hy); g.lineTo(503, 178 + hy);
+  g.lineTo(506, 182 + hy); g.lineTo(514, 186 + hy); g.lineTo(518, 194 + hy); g.lineTo(528, 194 + hy); g.lineTo(528, 160 + hy); g.closePath(); g.fill();
+  g.fillStyle = "#7fe0b0"; g.fillRect(501, 170 + hy, 1, 1); g.fillRect(503, 164 + hy, 1, 3);   // TV light on the nose and brow
+  g.fillStyle = "#1f1833"; g.fillRect(507, 166 + hy, 2, 1); g.fillStyle = "#ff7a7a"; g.fillRect(509, 173 + hy, 2, 1);
+  // fringe and crown
+  g.fillStyle = "#3b1838"; g.beginPath(); g.moveTo(505, 159 + hy); g.quadraticCurveTo(508, 146 + hy, 522, 145 + hy); g.quadraticCurveTo(536, 146 + hy, 538, 168 + hy); g.lineTo(528, 184 + hy); g.lineTo(525, 161 + hy); g.lineTo(512, 160 + hy); g.closePath(); g.fill();
+  g.fillStyle = "#7d3466"; g.fillRect(511, 148 + hy, 7, 1); g.fillRect(508, 151 + hy, 3, 1);
+  g.fillStyle = "#2f7a5a"; g.fillRect(505, 156 + hy, 1, 3);   // TV light on the fringe
+  // headphones
+  g.strokeStyle = "#161124"; g.lineWidth = 3; g.beginPath(); g.moveTo(514, 166 + hy); g.quadraticCurveTo(516, 140 + hy, 534, 152 + hy); g.stroke();
+  g.fillStyle = "#161124"; g.beginPath(); g.ellipse(522, 172 + hy, 6, 8, 0, 0, 7); g.fill(); g.fillStyle = "#3a2d55"; g.beginPath(); g.ellipse(522, 172 + hy, 3, 5, 0, 0, 7); g.fill();
+  // arm, hands and mug
+  g.fillStyle = "#2a2142"; g.beginPath(); g.moveTo(514, 198 + hy); g.quadraticCurveTo(500, 204, 494, 214); g.lineTo(502, 220); g.quadraticCurveTo(510, 212, 522, 206 + hy); g.fill();
+  g.fillStyle = "#e8b9a0"; g.fillRect(492, 210, 5, 5);
+  g.fillStyle = "#a3abc6"; g.fillRect(484, 203, 9, 11); g.fillStyle = "#d9d4e8"; g.fillRect(484, 203, 9, 1); g.fillStyle = "#3a2414"; g.fillRect(485, 204, 7, 2);
+  g.strokeStyle = "#a3abc6"; g.lineWidth = 2; g.beginPath(); g.arc(483, 208, 3, Math.PI * .5, Math.PI * 1.5); g.stroke();
+  return pixelize(cv, 18);
+}
+
+// ---------- the room ----------
+const Room = {
+  mx: 0, my: 0, tx: 0, ty: 0, zoom: false, hidden: false, t: 0, frameIx: -1,
+
+  open(id){
+    closeRoom?.();
+    Storm.hold = true; Storm.stop();
+    const el = document.createElement("div");
+    el.className = "room"; el.id = "room";
+    el.innerHTML = `
+      <div class="room-stage">
+        <div class="rl" data-d=".15"><canvas class="px" data-c="sky"></canvas><canvas class="px" data-c="skyfx"></canvas></div>
+        <div class="rl" data-d=".5"><canvas class="px" data-c="room"></canvas><canvas class="px" data-c="roomfx"></canvas>
+          <div class="tv-screen" style="left:${ROOM.tv.x}px;top:${ROOM.tv.y}px;width:${ROOM.tv.w}px;height:${ROOM.tv.h}px">
+            <canvas class="tv-static" width="142" height="80"></canvas>
+            <div class="tv-osd"><b>StormReel TV</b><span>Pick a channel</span></div>
+            <div class="crt"></div>
+          </div>
+        </div>
+        <div class="rl rl-front" data-d="1"><canvas class="px" data-c="girl"></canvas><canvas class="px" data-c="girlfx"></canvas></div>
+      </div>
+      <div class="room-fx"></div>
+      <a class="room-back" href="#/">← Leave the room</a>
+      <div class="remote" role="group" aria-label="Room controls">
+        <div class="np"><small id="rmKind">Now playing</small><b id="rmTitle">Nothing yet</b></div>
+        <button class="btn small primary" id="rmCh">Channels</button>
+        <button class="btn small" id="rmZoom">Zoom to TV</button>
+        <button class="btn small" id="rmSound">Rain sound: off</button>
+        <button class="btn small" id="rmHide">Hide</button>
+      </div>
+      <button class="btn small room-show" id="rmShow" hidden>Show controls</button>
+      <aside class="room-drawer" id="rmDrawer" hidden>
+        <div class="row" style="justify-content:space-between"><h2>Channels</h2><button class="btn small" id="rmDClose">Close ✕</button></div>
+        <div class="tabs" style="margin:12px 0"><button class="btn small on" data-rt="free">Free full films</button><button class="btn small" data-rt="trailers">Trailers</button></div>
+        <form id="rmSearch" class="row" style="margin-bottom:12px" hidden><input class="f" id="rmQ" placeholder="Search any film or series" autocomplete="off"><button class="btn small primary">Search</button></form>
+        <div id="rmList"></div>
+      </aside>`;
+    document.body.appendChild(el);
+    this.el = el; this.stage = el.querySelector(".room-stage"); this.layers = [...el.querySelectorAll(".rl")];
+    this.cv = Object.fromEntries([...el.querySelectorAll("canvas.px")].map(c => { c.width = LW; c.height = LH; return [c.dataset.c, c.getContext("2d")] }));
+    this.stat = el.querySelector(".tv-static").getContext("2d"); this.screen = el.querySelector(".tv-screen");
+    this.zoom = false; this.hidden = false; this.staticOn = true; this.playing = false; this.frameIx = -1;
+
+    // paint the scene once (takes a moment), then animate
+    if (!Room.art) Room.art = { sky: paintSky(), room: paintRoom(), girl: [0, 1, 2, 3].map(paintGirl) };
+    this.cv.sky.drawImage(Room.art.sky, 0, 0); this.cv.room.drawImage(Room.art.room, 0, 0);
+    this.rain = Array.from({ length: 300 }, () => this.rainDrop(true));
+    this.fog = Array.from({ length: 6 }, (_, i) => ({ x: 120 + i * 70, y: 210 + (i % 3) * 9, rx: 40 + i * 6, v: 3 + i }));
+    this.drips = Array.from({ length: 22 }, () => this.glassDrop(true));
+    this.steam = Array.from({ length: 7 }, (_, i) => ({ y: i * 4, ph: i }));
+    this.nextBolt = 4; this.bolt = null;
+
+    const onMove = e => { this.mx = e.clientX / innerWidth - .5; this.my = e.clientY / innerHeight - .5 };
+    const onResize = () => this.layout();
+    const onKey = e => {
+      if (e.target.closest?.("input,textarea")) return;
+      if (e.key === "Escape") this.drawer(false);
+      if (e.key.toLowerCase() === "z") this.setZoom(!this.zoom);
+      if (e.key.toLowerCase() === "h") this.setHidden(!this.hidden);
+    };
+    addEventListener("pointermove", onMove, { passive: true }); addEventListener("resize", onResize); addEventListener("keydown", onKey);
+
+    el.querySelector("#rmCh").onclick = () => this.drawer(true);
+    el.querySelector("#rmDClose").onclick = () => this.drawer(false);
+    el.querySelector("#rmZoom").onclick = () => this.setZoom(!this.zoom);
+    el.querySelector("#rmHide").onclick = () => this.setHidden(true);
+    el.querySelector("#rmShow").onclick = () => this.setHidden(false);
+    el.querySelector("#rmSound").onclick = () => this.sound(!this.soundOn);
+    el.querySelectorAll("[data-rt]").forEach(b => b.onclick = () => this.tab(b.dataset.rt));
+    el.querySelector("#rmSearch").onsubmit = e => { e.preventDefault(); this.search($("#rmQ").value.trim()) };
+    el.querySelector("#rmList").onclick = e => { const c = e.target.closest("[data-id]"); if (c) { e.preventDefault(); this.play(c.dataset.id); this.drawer(false) } };
+
+    this.layout();
+    this.running = true; this.last = performance.now();
+    const loop = now => { if (!this.running) return; const dt = Math.min(.05, (now - this.last) / 1000); this.last = now; this.frame(dt); this.raf = requestAnimationFrame(loop) };
+    if (Storm.still) this.frame(0); else this.raf = requestAnimationFrame(loop);
+
+    closeRoom = () => {
+      this.running = false; cancelAnimationFrame(this.raf); this.sound(false);
+      this.playerMessageCleanup?.(); this.playerMessageCleanup = null;
+      removeEventListener("pointermove", onMove); removeEventListener("resize", onResize); removeEventListener("keydown", onKey);
+      el.remove(); closeRoom = null; Storm.hold = false; Storm.start();
+    };
+    if (id) this.play(id); else setTimeout(() => this.drawer(true), 900);
+  },
+
+  // Fit the scene to the window (cover), or dolly in on the TV.
+  layout(){
+    const vw = innerWidth, vh = innerHeight, tv = ROOM.tv;
+    let s, fx, fy;
+    if (this.zoom) { s = Math.min(vw * .8 / tv.w, vh * .74 / tv.h); fx = tv.x + tv.w / 2; fy = tv.y + tv.h / 2 + (vh < 600 ? 0 : 14) }
+    else { s = Math.max(vw / ROOM.W, vh / ROOM.H); fx = vw / vh < 1.1 ? 1010 : 800; fy = 470 }
+    let x = vw / 2 - fx * s, y = vh / 2 - fy * s;
+    if (!this.zoom) { x = Math.min(0, Math.max(vw - ROOM.W * s, x)); y = Math.min(0, Math.max(vh - ROOM.H * s, y)) }
+    this.stage.style.transform = `translate(${x}px,${y}px) scale(${s})`;
+  },
+  setZoom(on){ this.zoom = on; this.el.classList.toggle("zoomed", on); $("#rmZoom").textContent = on ? "Step back" : "Zoom to TV"; this.layout() },
+  setHidden(on){ this.hidden = on; this.el.classList.toggle("ui-hidden", on); $("#rmShow").hidden = !on },
+  drawer(on){ $("#rmDrawer").hidden = !on; if (on && !$("#rmList").dataset.loaded) this.tab("free") },
+
+  async tab(which){
+    this.el.querySelectorAll("[data-rt]").forEach(b => b.classList.toggle("on", b.dataset.rt === which));
+    $("#rmSearch").hidden = which !== "trailers";
+    $("#rmList").dataset.loaded = "1";
+    $("#rmList").innerHTML = `<div class="rm-grid">${Array.from({ length: 9 }, () => `<div class="poster skel"></div>`).join("")}</div>`;
+    try {
+      const list = which === "free" ? await freeFilms() : await Providers.active().trending();
+      this.list(list, which === "free" ? "Full film" : "Trailer");
+    } catch (e) { $("#rmList").innerHTML = empty("Signal lost", esc(e.message)) }
+  },
+  async search(q){
+    if (!q) return this.tab("trailers");
+    $("#rmList").innerHTML = `<div class="rm-grid">${Array.from({ length: 6 }, () => `<div class="poster skel"></div>`).join("")}</div>`;
+    try { this.list(await Providers.active().search(q), "Trailer") } catch (e) { $("#rmList").innerHTML = empty("Signal lost", esc(e.message)) }
+  },
+  list(items, kind){
+    items = items.filter(t => t && t.poster);
+    $("#rmList").innerHTML = items.length ? `<div class="rm-grid">${items.map(t => `<a href="#" class="card" data-id="${esc(t.id)}"><div class="poster">${posterImg(t)}<span class="tag">${OpenFilms.find(t.id) ? "Full film" : kind}</span></div><div class="t">${esc(t.title)}</div></a>`).join("")}</div>` : empty("Nothing on", "Try another search.");
+  },
+
+  // Change channel: a burst of static, then the picture.
+  async play(id){
+    history.replaceState(null, "", "#/room/" + encodeURIComponent(id));
+    this.playerMessageCleanup?.(); this.playerMessageCleanup = null;
+    this.screen.querySelector("iframe")?.remove();
+    const playRequest = this.playRequest = (this.playRequest || 0) + 1;
+    this.staticOn = true; this.playing = false;
+    this.osd("Tuning…", "");
+    const [src] = await Promise.all([roomSource(id), new Promise(r => setTimeout(r, 650))]);
+    if (!this.running || playRequest !== this.playRequest) return;
+    $("#rmTitle").textContent = src.title || "Untitled";
+    if (src.none) { $("#rmKind").textContent = "No signal"; this.osd(src.title || "No signal", "A TMDB ID is required for Stellar"); return }
+    $("#rmKind").textContent = "Now playing · " + src.kind;
+    const f = document.createElement("iframe");
+    f.id = "room-stellar-player";
+    f.src = src.embed; f.title = (src.title || "Video") + " · Stellar player on the room TV";
+    f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
+    const initialize = () => f.contentWindow?.postMessage({ type: "STELLAR_EMBED_INIT" }, "https://stellar.rip");
+    const onMessage = event => {
+      if (event.origin !== "https://stellar.rip" || event.source !== f.contentWindow) return;
+      if (event.data?.type === "STELLAR_EMBED_READY") initialize();
+    };
+    window.addEventListener("message", onMessage);
+    this.playerMessageCleanup = () => window.removeEventListener("message", onMessage);
+    f.addEventListener("load", () => { if (playRequest !== this.playRequest) return; this.staticOn = false; this.playing = true; this.osd("", ""); initialize() });
+    this.screen.insertBefore(f, this.screen.querySelector(".crt"));
+  },
+  osd(a, b){ const o = this.screen.querySelector(".tv-osd"); o.hidden = !a; o.innerHTML = a ? `<b>${esc(a)}</b><span>${esc(b)}</span>` : "" },
+
+  // ---------- animation (all at the low pixel resolution) ----------
+  rainDrop(any){ const z = Math.random(); return { x: 130 + Math.random() * 380, y: any ? Math.random() * 260 : -Math.random() * 40, z, v: 160 + 140 * z, l: z > .6 ? 4 : 3 } },
+  glassDrop(any){ return { x: 156 + Math.random() * 328, y: any ? 20 + Math.random() * 220 : 20 + Math.random() * 40, vy: 0, wait: Math.random() * 6, trail: 0 } },
+  frame(dt){
+    const t = (this.t += dt);
+    // parallax, snapped to whole art pixels so the pixel grid never smears
+    this.tx += (this.mx + Math.sin(t * .13) * .12 - this.tx) * Math.min(1, dt * 2.5);
+    this.ty += (this.my + Math.cos(t * .11) * .08 - this.ty) * Math.min(1, dt * 2.5);
+    const amp = this.zoom ? .35 : 1, snap = v => Math.round(v / PX) * PX;
+    for (const l of this.layers) { const d = +l.dataset.d; l.style.transform = `translate3d(${snap(-this.tx * d * 26 * amp)}px,${snap(-this.ty * d * 14 * amp)}px,0)` }
+    const clear = g => { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, LW, LH); g.setTransform(1, 0, 0, 1, OX, OY) };
+
+    // sky: rain, drifting red fog, crimson lightning
+    const s = this.cv.skyfx; clear(s);
+    for (const f of this.fog) { f.x += f.v * dt; if (f.x - f.rx > 500) f.x = 130 - f.rx;
+      s.fillStyle = "rgba(110,20,40,.22)"; s.beginPath(); s.ellipse(f.x | 0, f.y, f.rx, 7, 0, 0, 7); s.fill(); s.fillStyle = "rgba(150,32,51,.16)"; s.beginPath(); s.ellipse(f.x | 0, f.y, f.rx * .6, 4, 0, 0, 7); s.fill() }
+    for (const d of this.rain) { d.y += d.v * dt; d.x -= d.v * .1 * dt; if (d.y > 256) Object.assign(d, this.rainDrop(false)); s.fillStyle = d.z > .6 ? "#7a82a3" : "#3e4360"; s.fillRect(d.x | 0, d.y | 0, 1, d.l) }
+    if (t > this.nextBolt && !Storm.still) {
+      let x = 170 + Math.random() * 300, y = 104; const pts = [[x, y]]; while (y < 196) { y += 4 + Math.random() * 6; x += (Math.random() - .5) * 10; pts.push([x, y]) }
+      this.bolt = { pts, born: t }; this.nextBolt = t + 7 + Math.random() * 14;
+    }
+    if (this.bolt) {
+      const age = t - this.bolt.born, on = age < .08 || (age > .14 && age < .24);
+      if (age > .5) this.bolt = null;
+      else if (on) {
+        s.fillStyle = "rgba(224,72,90,.18)"; s.fillRect(130, 0, 380, 260);
+        for (const [x, y] of this.bolt.pts) { s.fillStyle = "#e0485a"; s.fillRect((x | 0) - 1, y | 0, 3, 3) }
+        s.strokeStyle = "#ffb3a7"; s.lineWidth = 1; s.beginPath(); this.bolt.pts.forEach(([x, y], i) => i ? s.lineTo(x | 0, y | 0) : s.moveTo(x | 0, y | 0)); s.stroke();
+      }
+    }
+
+    // room: candle flames and their glow, rain running down the glass, the TV's flicker, the cat's tail
+    const r = this.cv.roomfx; clear(r);
+    for (const [cx, cy] of CANDLES) {
+      const fl = Math.sin(t * 8 + cx) * .5 + Math.sin(t * 21 + cy) * .5;
+      for (const [rad, a] of [[30, .035], [19, .05], [11, .07]]) { r.fillStyle = `rgba(242,180,90,${a})`; r.beginPath(); r.arc(cx, cy - 3, rad + fl, 0, 7); r.fill() }
+      const h = 4 + (fl > .3 ? 1 : 0), dx = fl > .8 ? 1 : fl < -.8 ? -1 : 0;
+      r.fillStyle = "#c4843a"; r.fillRect(cx - 1 + dx, cy - h, 3, h); r.fillStyle = "#f2b45a"; r.fillRect(cx + dx, cy - h - 1, 1, h); r.fillStyle = "#fff4cf"; r.fillRect(cx, cy - 2, 1, 2);
+    }
+    r.save(); archPath(r); r.clip();
+    for (const d of this.drips) {
+      if (dt) { if (d.wait > 0) d.wait -= dt; else { d.vy = Math.min(60, d.vy + 40 * dt); d.y += d.vy * dt; d.trail = Math.min(d.trail + d.vy * dt, 40) } }
+      if (d.y > 250) Object.assign(d, this.glassDrop(false), { wait: Math.random() * 4 });
+      if (d.trail > 1) { r.fillStyle = "rgba(163,171,198,.35)"; r.fillRect(d.x | 0, (d.y - d.trail) | 0, 1, d.trail | 0) }
+      r.fillStyle = "#a3abc6"; r.fillRect(d.x | 0, d.y | 0, 2, 2); r.fillStyle = "#f2eefa"; r.fillRect(d.x | 0, d.y | 0, 1, 1);
+    }
+    r.restore();
+    if (this.playing) {   // the picture's light flickers over the room
+      const k = .5 + .5 * Math.sin(t * 3.1) * Math.sin(t * 1.7 + 1);
+      r.fillStyle = `rgba(127,224,176,${.035 + .035 * k})`; r.beginPath(); r.ellipse(310, 236, 150, 50, 0, 0, 7); r.fill();
+      r.fillStyle = `rgba(127,224,176,${.04 + .04 * k})`; r.beginPath(); r.ellipse(310, 180, 120, 70, 0, 0, 7); r.fill();
+    }
+    const tail = Math.sin(t * 1.6) > 0;
+    r.fillStyle = "#0e0a18"; (tail ? [[434, 230], [437, 227], [439, 223], [440, 219]] : [[434, 230], [438, 229], [441, 226], [443, 222]]).forEach(([x, y]) => r.fillRect(x, y, 2, 3));
+
+    // the girl: swap sprite frames to the beat; steam and her headphones' little light
+    const fi = Math.floor(t / .55) % 4;
+    if (fi !== this.frameIx) { this.frameIx = fi; const gg = this.cv.girl; gg.setTransform(1, 0, 0, 1, 0, 0); gg.clearRect(0, 0, LW, LH); gg.drawImage(Room.art.girl[fi], 0, 0) }
+    const gf = this.cv.girlfx; clear(gf);
+    for (const p of this.steam) { p.y = (p.y + dt * 9) % 28; const a = 1 - p.y / 28; gf.fillStyle = `rgba(217,212,232,${.55 * a})`; gf.fillRect((488 + Math.sin(p.y / 4 + p.ph) * 2) | 0, (201 - p.y) | 0, 1, 1) }
+    if (Math.sin(t * 5) > 0) { gf.fillStyle = "#e0485a"; gf.fillRect(524, 168 + [0, 0, 1, 1][fi], 1, 1) }
+
+    // TV static while tuning
+    if (this.staticOn) {
+      const st = this.stat, img = st.createImageData(142, 80), px = img.data;
+      for (let i = 0; i < px.length; i += 4) { const v = Math.random() * 200 | 0; px[i] = v * .8; px[i + 1] = v; px[i + 2] = v * .85; px[i + 3] = 255 }
+      st.putImageData(img, 0, 0);
+    }
+  },
+
+  // Optional rain ambience, synthesised (no audio files): steady rain, little drips, distant thunder.
+  sound(on){
+    this.soundOn = on;
+    const btn = $("#rmSound"); if (btn) btn.textContent = "Rain sound: " + (on ? "on" : "off");
+    if (!on) { clearTimeout(this.dripT); clearTimeout(this.thunT); this.ac?.suspend(); return }
+    if (!this.ac) {
+      const ac = this.ac = new (window.AudioContext || window.webkitAudioContext)();
+      const len = ac.sampleRate * 3, buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      this.noise = buf;
+      const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+      const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600;
+      const hp = ac.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 380;
+      const gain = ac.createGain(); gain.gain.value = .13;
+      src.connect(hp).connect(lp).connect(gain).connect(ac.destination); src.start();
+    }
+    this.ac.resume();
+    const ac = this.ac, burst = (freq, q, peak, attack, decay, type = "bandpass") => {
+      const s = ac.createBufferSource(); s.buffer = this.noise;
+      const f = ac.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+      const g = ac.createGain(), t = ac.currentTime; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + attack); g.gain.exponentialRampToValueAtTime(.0001, t + attack + decay);
+      s.connect(f).connect(g).connect(ac.destination); s.start(t, Math.random() * 2); s.stop(t + attack + decay + .1);
+    };
+    const drip = () => { if (!this.soundOn) return; burst(2500 + Math.random() * 3000, 8, .05 + Math.random() * .05, .002, .06); this.dripT = setTimeout(drip, 60 + Math.random() * 380) };
+    const thunder = () => { if (!this.soundOn) return; burst(90, .7, .55, .9, 4.5, "lowpass"); this.thunT = setTimeout(thunder, 25000 + Math.random() * 40000) };
+    clearTimeout(this.dripT); clearTimeout(this.thunT);
+    drip(); this.thunT = setTimeout(thunder, 9000 + Math.random() * 12000);
+  }
+};
+
 /* ---------- router ---------- */
 function route(){
   const h = location.hash.slice(1) || "/";
@@ -1317,6 +2449,7 @@ function route(){
   const arg = decodeURIComponent(rest.join("/"));
   chrome("/" + seg);
   closeTheater?.();
+  closeRoom?.();
   app.onclick = null;
   app.style.animation = "none"; void app.offsetWidth; app.style.animation = "";
   window.scrollTo(0, 0);
@@ -1346,7 +2479,8 @@ async function boot(){
   } else if (Store.recovery) history.replaceState(null, "", location.pathname + "#/reset");
   applyTheme();
   $("#searchForm").addEventListener("submit", e => { e.preventDefault(); const q = $("#q").value.trim(); if (q) { Storm.strike(); location.hash = "#/search/" + encodeURIComponent(q) } });
-  $("#wx").addEventListener("click", () => { const o = Storm.order; Storm.setLevel(o[(o.indexOf(Storm.level) + 1) % o.length]); wxButton(); toast("Weather: " + Storm.cfg().label); if (location.hash === "#/settings") Views.settings() });
+  $("#wx").addEventListener("click", openForecast);
+  addEventListener("keydown", e => { if (e.key === "Escape") closeForecast() });
   $("#logo").addEventListener("click", () => { const r = $("#logo svg").getBoundingClientRect(); Storm.strike({ x: r.left + r.width / 2 }) });
   addEventListener("hashchange", route);
   route();
