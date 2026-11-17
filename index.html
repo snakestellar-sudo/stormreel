@@ -628,19 +628,57 @@ const OpenFilms = {
   },
   ids(kind){ return Object.keys(this.films).filter(id => !kind || this.films[id].kind === kind) }
 };
-const Streams = {
-  name: "videasy",
-  language(){
-    const locale = String(navigator.language || "en").toLowerCase();
-    if (locale === "zh-tw" || locale.startsWith("zh-hant")) return "zh-TW";
-    if (locale.startsWith("zh")) return "zh-CN";
-    if (locale === "es-es") return "es-ES";
-    if (locale.startsWith("es-") && locale !== "es-es") return "es-419";
-    if (locale === "pt-br" || locale.startsWith("pt-")) return "pt-BR";
-    const code = locale.split("-")[0];
-    const supported = ["en","fr","fil","nl","de","it","ko","ja","hi","ru","ar"];
-    return supported.includes(code) ? code : "en";
+// VidLink embeds use TMDB IDs. Player state is saved locally, separately from
+// VidLink's own `vidLinkProgress` data so neither store overwrites the other.
+const VIDLINK_ORIGIN = "https://vidlink.pro";
+const VIDLINK_PROGRESS_KEY = "stormreel:vidlink-progress";
+const VidLinkProgress = {
+  all(){ try { return JSON.parse(localStorage.getItem(VIDLINK_PROGRESS_KEY) || "{}") || {} } catch { return {} } },
+  get(id, season = 1, episode = 1){
+    const item = this.all()[String(id)];
+    return item?.type === "tv" ? item?.episodes?.[`${season}:${episode}`] || null : item?.progress || null;
   },
+  save(data){
+    if (!data || !["movie", "tv"].includes(data.mediaType)) return;
+    const id = Number(data.tmdbId), currentTime = Number(data.currentTime), duration = Number(data.duration);
+    if (!Number.isSafeInteger(id) || id <= 0 || !Number.isFinite(currentTime) || currentTime < 0 || !Number.isFinite(duration) || duration <= 0) return;
+    const all = this.all(), key = String(id), item = all[key] || {type:data.mediaType, episodes:{}};
+    item.type = data.mediaType;
+    const progress = {watched:Math.min(currentTime,duration), duration, updated:Date.now()};
+    if (data.mediaType === "tv") {
+      const season = Number(data.season), episode = Number(data.episode);
+      if (!Number.isInteger(season) || season < 0 || !Number.isInteger(episode) || episode < 1) return;
+      item.episodes ||= {}; item.episodes[`${season}:${episode}`] = progress;
+      item.lastSeason = season; item.lastEpisode = episode;
+    } else item.progress = progress;
+    all[key] = item;
+    try { localStorage.setItem(VIDLINK_PROGRESS_KEY, JSON.stringify(all)) } catch {}
+  }
+};
+function listenToVidLink(iframe, expected){
+  const listener = event => {
+    if (event.origin !== VIDLINK_ORIGIN || event.source !== iframe.contentWindow) return;
+    const payload = event.data;
+    if (!payload || typeof payload !== "object") return;
+    if (payload.type === "PLAYER_EVENT" && payload.data && typeof payload.data === "object") {
+      const d = payload.data;
+      if (!["play","pause","seeked","ended","timeupdate"].includes(d.event)) return;
+      if (Number(d.tmdbId) !== Number(expected.tmdbId) || d.mediaType !== expected.mediaType) return;
+      if (expected.mediaType === "tv" && (Number(d.season) !== Number(expected.season) || Number(d.episode) !== Number(expected.episode))) return;
+      VidLinkProgress.save(d);
+      iframe.dataset.playbackStatus = d.event;
+    }
+    // VidLink's MEDIA_DATA message includes its own localStorage structure.
+    // Keep it under the provider's documented key, without trusting unrelated frames.
+    if (payload.type === "MEDIA_DATA" && payload.data && typeof payload.data === "object" && !Array.isArray(payload.data)) {
+      try { localStorage.setItem("vidLinkProgress", JSON.stringify(payload.data)) } catch {}
+    }
+  };
+  window.addEventListener("message", listener);
+  return () => window.removeEventListener("message", listener);
+}
+const Streams = {
+  name: "vidlink",
   find(titleOrId, season = 1, episode = 1){
     const title = titleOrId && typeof titleOrId === "object" ? titleOrId : null;
     const rawId = String(title ? title.id || "" : titleOrId || "");
@@ -655,10 +693,17 @@ const Streams = {
       mediaType = String(title.type).toLowerCase(); tmdbId = rawId;
     }
     if (!/^\d+$/.test(String(tmdbId || "")) || !["movie","tv"].includes(mediaType)) return null;
-    const url = mediaType === "movie"
-      ? `https://videasy.xyz/embed/movie/${tmdbId}`
-      : `https://videasy.xyz/embed/tv/${tmdbId}/${Math.max(0, Number(season) || 1)}/${Math.max(1, Number(episode) || 1)}`;
-    return { embed: url, from: "Videasy", tmdbId, mediaType, season, episode };
+    season = Math.max(0, Number(season) || 1); episode = Math.max(1, Number(episode) || 1);
+    const path = mediaType === "movie" ? `movie/${tmdbId}` : `tv/${tmdbId}/${season}/${episode}`;
+    const url = new URL(`https://vidlink.pro/${path}`);
+    url.searchParams.set("title", "false");
+    url.searchParams.set("autoplay", "false");
+    url.searchParams.set("nextbutton", "true");
+    // Resume from locally captured playback events when available.
+    const previous = VidLinkProgress.get(tmdbId, season, episode);
+    if (previous?.watched > 10 && previous.watched < previous.duration - 20)
+      url.searchParams.set("startAt", String(Math.floor(previous.watched)));
+    return {embed:url.toString(), from:"VidLink", tmdbId, mediaType, season, episode};
   }
 };
 
@@ -1621,38 +1666,28 @@ function theater(t, season = 1, episode = 1){
   const el = document.createElement("section");
   el.className = "inline-player sec";
   el.setAttribute("aria-label", "Now playing: " + t.title);
-  el.innerHTML = `<div class="sec-h"><div><div class="kicker" style="margin:0 0 4px">Now playing · Videasy</div><h2>${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</h2></div><button class="btn small" id="thClose">Close ✕</button></div>
+  el.innerHTML = `<div class="sec-h"><div><div class="kicker" style="margin:0 0 4px">Now playing · VidLink</div><h2>${esc(t.title)}${t.type === "tv" ? ` · S${season} E${episode}` : ""}</h2></div><button class="btn small" id="thClose">Close ✕</button></div>
     <div class="th-frame" id="PlayerContainer"></div>
-    <div class="th-foot muted">Video provided by Videasy.</div>`;
+    <div class="th-foot muted">Video provided by VidLink.</div>`;
   const player = el.querySelector("#PlayerContainer");
   const stream = Streams.find(t, season, episode);
   if (!stream) {
-    player.innerHTML = `<div class="panel" style="height:100%;display:grid;place-items:center;text-align:center;padding:24px"><p>This title does not have a numeric TMDB ID. Videasy embeds require a TMDB movie or series ID.</p></div>`;
+    player.innerHTML = `<div class="panel" style="height:100%;display:grid;place-items:center;text-align:center;padding:24px"><p>This title does not have a numeric TMDB ID. VidLink embeds require a TMDB movie or series ID.</p></div>`;
   } else {
     const iframe = document.createElement("iframe");
-    iframe.id = "videasy-player";
+    iframe.id = "vidlink-player";
     iframe.src = stream.embed;
-    iframe.title = `${t.title} · Videasy player`;
+    iframe.title = `${t.title} · VidLink player`;
     iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
     iframe.allowFullscreen = true;
     player.appendChild(iframe);
   }
   feature.insertAdjacentElement("afterend", el);
-  const playerOrigin = "https://videasy.xyz";
-  const getPlayerFrame = () => el.querySelector("#videasy-player");
-  const onPlayerMessage = event => {
-    const frame = getPlayerFrame();
-    if (event.origin !== playerOrigin || event.source !== frame?.contentWindow) return;
-    const type = event.data?.type;
-    if (type === "videasy:play" || type === "videasy:pause" || type === "videasy:ended") {
-      el.dataset.playbackStatus = type.slice(8);
-    }
-  };
-  window.addEventListener("message", onPlayerMessage);
+  const stopListening = stream ? listenToVidLink(el.querySelector("#vidlink-player"), stream) : () => {};
   closeTheater = () => {
     el.remove();
-    window.removeEventListener("message", onPlayerMessage);
+    stopListening();
     closeTheater = null;
     Storm.start();
   };
@@ -2215,13 +2250,13 @@ function watchSpot(t){
   play.addEventListener("click", e => { if (spot() === "room") { e.stopImmediatePropagation(); location.hash = "#/room/" + encodeURIComponent(t.id) } }, true);
 }
 
-// The Rain Room uses the same Videasy TMDB player as the title page.
+// The Rain Room uses the same VidLink TMDB player as the title page.
 async function roomSource(id){
   const stream = Streams.find(id);
   const prov = Providers.for(id);
   let t = null; try { t = prov?.ready() ? await prov.details(id) : null } catch {}
   return stream
-    ? { embed: stream.embed, kind: "Videasy", title: t?.title || "", tmdbId: stream.tmdbId }
+    ? { embed: stream.embed, kind: "VidLink", title: t?.title || "", tmdbId: stream.tmdbId, mediaType: stream.mediaType, season: stream.season, episode: stream.episode }
     : { none: true, title: t?.title || "" };
 }
 
@@ -2560,15 +2595,16 @@ const Room = {
     const [src] = await Promise.all([roomSource(id), new Promise(r => setTimeout(r, 650))]);
     if (!this.running || playRequest !== this.playRequest) return;
     $("#rmTitle").textContent = src.title || "Untitled";
-    if (src.none) { $("#rmKind").textContent = "No signal"; this.osd(src.title || "No signal", "A TMDB ID is required for Videasy"); return }
+    if (src.none) { $("#rmKind").textContent = "No signal"; this.osd(src.title || "No signal", "A TMDB ID is required for VidLink"); return }
     $("#rmKind").textContent = "Now playing · " + src.kind;
     const f = document.createElement("iframe");
-    f.id = "room-videasy-player";
-    f.src = src.embed; f.title = (src.title || "Video") + " · Videasy player on the room TV";
+    f.id = "room-vidlink-player";
+    f.src = src.embed; f.title = (src.title || "Video") + " · VidLink player on the room TV";
     f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
-    // Videasy embeds work directly; no Stellar initialization handshake is required.
+    // VidLink embeds work directly; no Stellar initialization handshake is required.
     f.addEventListener("load", () => { if (playRequest !== this.playRequest) return; this.staticOn = false; this.playing = true; this.osd("", "") });
     this.screen.insertBefore(f, this.screen.querySelector(".crt"));
+    this.playerMessageCleanup = listenToVidLink(f, src);
   },
   osd(a, b){ const o = this.screen.querySelector(".tv-osd"); o.hidden = !a; o.innerHTML = a ? `<b>${esc(a)}</b><span>${esc(b)}</span>` : "" },
 
