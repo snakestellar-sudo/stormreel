@@ -2880,26 +2880,31 @@ async function partyPlayer(host, src, on){
     const iframe=document.createElement("iframe"); iframe.src=src.stream.embed;
     iframe.title=src.title+" · VidSrc"; iframe.allow="autoplay; fullscreen; picture-in-picture; encrypted-media";
     iframe.allowFullscreen=true; iframe.referrerPolicy="strict-origin-when-cross-origin"; host.appendChild(iframe);
-    let seconds=0,total=0,isPlaying=false;
+    let seconds=0,total=0,isPlaying=false,ready=false,disposed=false;
+    const cmd=(action)=>{if(!disposed && iframe.contentWindow)iframe.contentWindow.postMessage({player:true,action},VIDSRC_ORIGIN)};
     const handler=event=>{
       if(event.origin!==VIDSRC_ORIGIN || event.source!==iframe.contentWindow || event.data?.type!=="PLAYER_EVENT")return;
       const d=event.data.data, info=d?.player_info;
-      if(!info || Number(info.tmdb)!==Number(src.stream.tmdbId))return;
+      if(!info || (info.tmdb != null && Number(info.tmdb)!==Number(src.stream.tmdbId)))return;
       if(src.stream.mediaType==="tv" && (Number(info.season)!==Number(src.stream.season)||Number(info.episode)!==Number(src.stream.episode)))return;
-      seconds=Number(d.player_progress)||seconds;total=Number(d.player_duration)||total;
-      if(d.player_status==="playing"){isPlaying=true;on("play")}
+      ready=true;
+      if(Number.isFinite(Number(d.player_progress)))seconds=Number(d.player_progress);
+      if(Number.isFinite(Number(d.player_duration)))total=Number(d.player_duration);
+      if(d.player_status==="playing"){
+        const wasPlaying=isPlaying;isPlaying=true;
+        if(!wasPlaying)on("play");
+      }
       if(d.player_status==="paused"){isPlaying=false;on("pause")}
       if(d.player_status==="seeked")on("seek");
       if(d.player_status==="completed"){isPlaying=false;on("ended")}
       if(total>0 && ["playing","paused","seeked"].includes(d.player_status)) {
-        VidSrcProgress.save({tmdbId:info.tmdb,mediaType:info.mediaType,season:info.season,episode:info.episode,currentTime:seconds,duration:total});
+        VidSrcProgress.save({tmdbId:src.stream.tmdbId,mediaType:src.stream.mediaType,season:src.stream.season,episode:src.stream.episode,currentTime:seconds,duration:total});
         if(src.t)Progress.save(src.t.id,{t:progSnap(src.t),season:src.stream.mediaType==="tv"?src.stream.season:null,episode:src.stream.mediaType==="tv"?src.stream.episode:null,pos:seconds,dur:total});
       }
     };
     window.addEventListener("message",handler);
-    // VidSrc does not document a parent-to-iframe transport control API.
-    return {play:()=>Promise.resolve(),pause:()=>{},seek:()=>{},time:()=>seconds,playing:()=>isPlaying,duration:()=>total,
-      destroy:()=>{window.removeEventListener("message",handler);iframe.remove()},external:true};
+    return {play:()=>{cmd("play");return Promise.resolve()},pause:()=>cmd("pause"),seek:t=>{if(Number.isFinite(t)){seconds=Math.max(0,t);cmd("seek"+seconds.toFixed(2))}},time:()=>seconds,playing:()=>isPlaying,duration:()=>total,
+      ready:()=>ready, destroy:()=>{disposed=true;window.removeEventListener("message",handler);iframe.remove()},external:false,vidsrc:true};
   }
   if (src.kind === "yt") {
     await loadYouTubeApi();
@@ -2930,7 +2935,7 @@ const Party = {
     const sb = Store.sb || CloudStore.sb;
     if (!sb) { app.innerHTML = empty("Parties need the cloud", "Watch parties sync through the site's Supabase project, which isn't connected right now."); return }
     const me = { id: crypto.randomUUID(), name: partyName(), joined: Date.now() };
-    Object.assign(this, { code, me, sb, v: 0, p: null, src: null, titleId: null, want: false, quietUntil: 0, members: [], gotState: false, alive: true });
+    Object.assign(this, { code, me, sb, v: 0, p: null, src: null, titleId: null, want: false, quietUntil: 0, members: [], lastRemote: null, pendingSync: null, gotState: false, alive: true });
     app.innerHTML = `
       <div class="party">
         <div class="party-main">
@@ -2967,7 +2972,7 @@ const Party = {
     $("#ptShare")?.addEventListener("click", () => navigator.share({ title: "StormReel watch party", text: `Join my watch party (code ${code})`, url: partyLink(code) }).catch(() => {}));
     // controls
     $("#ptLeave").onclick = () => { location.hash = "#/" };
-    $("#ptResync").onclick = () => this.send({ type: "hello", from: this.me.id });
+    $("#ptResync").onclick = () => { if(this.lastRemote) this.applyState(this.lastRemote,true); else this.send({type:"hello",from:this.me.id}) };
     $("#ptTap").onclick = () => { $("#ptTap").hidden = true; this.p?.play() };
     $("#ptPickBtn").onclick = () => { const pk = $("#ptPick"); pk.hidden = !pk.hidden; if (!pk.hidden && !$("#ptList").dataset.loaded) this.pickTab("discover") };
     $("#ptPick").querySelectorAll("[data-pk]").forEach(b => b.onclick = () => this.pickTab(b.dataset.pk));
@@ -2993,7 +2998,7 @@ const Party = {
     });
     // the party's leader keeps everyone honest with a heartbeat
     this.hb = setInterval(() => { if (this.isLeader() && this.p && this.titleId) this.broadcastState("tick") }, 4000);
-    closeParty = () => { this.alive = false; clearInterval(this.hb); try { this.p?.destroy() } catch {} try { sb.removeChannel(ch) } catch {} closeParty = null };
+    closeParty = () => { this.alive = false; clearInterval(this.hb); clearTimeout(this.lt); clearTimeout(this.pendingSync); try { this.p?.destroy() } catch {} try { sb.removeChannel(ch) } catch {} closeParty = null };
     if (startId && !this.gotState) history.replaceState(null, "", "#/party/" + code);
     $("#ptMsg").addEventListener("keydown", e => e.stopPropagation());
   },
@@ -3007,7 +3012,29 @@ const Party = {
     $("#ptMembers").innerHTML = this.members.map((m, i) => `<div class="member">${avatar(m.name)}<b>@${esc(m.name)}</b>${m.id === this.me.id ? `<span class="chip">you</span>` : ""}${i === 0 ? `<span class="chip">host</span>` : ""}</div>`).join("");
   },
   state(){ return { titleId: this.titleId, season:this.src?.stream?.season||1, episode:this.src?.stream?.episode||1, playing: this.p ? this.p.playing() : false, t: this.p ? this.p.time() : 0 } },
-  broadcastState(reason, by){ if (!this.titleId) return; this.send({ type: "state", reason, by: by || this.me.name, v: this.v, ...this.state() }) },
+  broadcastState(reason, by){ if (!this.titleId) return; this.send({ type: "state", reason, by: by || this.me.name, v: this.v, sentAt: Date.now(), ...this.state() }) },
+  async applyState(m, force=false){
+    if(!this.alive || !this.p)return;
+    const player=this.p;
+    // VidSrc ignores commands until its internal player has initialized.
+    if(player.vidsrc && !player.ready()){
+      clearTimeout(this.pendingSync);
+      this.pendingSync=setTimeout(()=>{if(this.alive && this.p===player)this.applyState(m,force)},1200);
+      return;
+    }
+    clearTimeout(this.pendingSync);
+    const latency=m.playing && Number.isFinite(m.sentAt)?Math.min(3,Math.max(0,(Date.now()-m.sentAt)/1000)):0;
+    const target=Math.max(0,(Number(m.t)||0)+latency);
+    const drift=Math.abs(player.time()-target);
+    const threshold=force?0.3:(m.reason==="tick"?2.5:m.playing?0.75:0.3);
+    this.want=!!m.playing;
+    this.quiet(player.vidsrc?2200:1200);
+    if(drift>threshold)player.seek(target);
+    if(m.playing && !player.playing()){
+      try{await player.play()}catch{}
+      setTimeout(()=>{if(this.alive && this.p===player && this.want && !player.playing())$("#ptTap").hidden=false},1800);
+    } else if(!m.playing && player.playing())player.pause();
+  },
 
   async receive(m){
     if (!this.alive) return;
@@ -3020,12 +3047,8 @@ const Party = {
     this.gotState = true;
     if (m.titleId !== this.titleId || (this.src?.kind==="vidsrc" && this.src.stream.mediaType==="tv" && (Number(m.season||1)!==this.src.stream.season || Number(m.episode||1)!==this.src.stream.episode))) { await this.load(m.titleId,m.season||1,m.episode||1); if (m.reason === "change") this.system(`@${m.by} put on ${this.src?.title || "something new"}`) }
     if (!this.p) return;
-    this.quiet(1200);
-    const target = m.t + (m.playing ? .3 : 0), drift = Math.abs(this.p.time() - target);
-    if (!this.p.external && drift > (m.reason === "tick" ? 1.5 : m.playing ? .5 : .15)) this.p.seek(target);   // pauses land on the same frame
-    this.want = m.playing;
-    if (!this.p.external && m.playing && !this.p.playing()) { try { await this.p.play() } catch {} setTimeout(() => { if (this.alive && this.want && !this.p.playing()) $("#ptTap").hidden = false }, 1500) }
-    if (!this.p.external && !m.playing && this.p.playing()) this.p.pause();
+    this.lastRemote=m;
+    await this.applyState(m);
     if (m.reason === "play" || m.reason === "pause" || m.reason === "seek") this.say(m.by, m.reason, m.t);
   },
   // things the local viewer does with the player controls
@@ -3048,13 +3071,14 @@ const Party = {
   async load(id,season=1,episode=1){
     if (!id) return;
     $("#ptSetEpisode")?.parentElement?.remove();
+    clearTimeout(this.pendingSync);this.lastRemote=null;
     this.titleId = id; this.p?.destroy(); this.p = null;
     $("#ptScreen").innerHTML = `<div class="party-wait"><div class="pulse">${BOLT}</div><b>Loading…</b></div>`;
     const src = this.src = await partySource(id,season,episode);
     if (!this.alive || this.titleId !== id) return;
     if (!src) { $("#ptScreen").innerHTML = `<div class="party-wait"><b>Nothing to play</b><span>This title needs a TMDB ID or a supported video source.</span></div>`; $("#ptTitle").textContent = "Pick something to watch"; return }
     $("#ptTitle").textContent = src.title;
-    if(src.kind==="vidsrc")$("#ptStatus").textContent="Room and title sync across devices; VidSrc playback controls are independent.";
+    if(src.kind==="vidsrc")$("#ptStatus").textContent="VidSrc player controls connected. Playback sync activates after the player starts.";
     $("#ptKind").innerHTML = `${src.label}${src.t?.year ? " · " + esc(src.t.year) : ""} · <a href="#/title/${encodeURIComponent(id)}">Details</a>`;
     if (src.t?.backdrop) app.querySelector(".party").style.setProperty("--bd", `url('${src.t.backdrop}')`);
     if(src.kind==="vidsrc" && src.stream.mediaType==="tv"){
@@ -3063,7 +3087,9 @@ const Party = {
       $("#ptScreen").insertAdjacentElement("afterend",bar);
       $("#ptSetEpisode").onclick=()=>this.change(id,Math.max(1,Number($("#ptSeason").value)||1),Math.max(1,Number($("#ptEpisode").value)||1));
     }
-    try { const pl = await partyPlayer($("#ptScreen"), src, e => this.local(e)); if (this.titleId !== id || !this.alive) { pl.destroy(); return } this.p = pl }
+    try { const pl = await partyPlayer($("#ptScreen"), src, e => this.local(e)); if (this.titleId !== id || !this.alive) { pl.destroy(); return } this.p = pl;
+      if(this.lastRemote && this.lastRemote.titleId===id)this.applyState(this.lastRemote);
+    }
     catch (e) { $("#ptScreen").innerHTML = `<div class="party-wait"><b>Couldn't load the player</b><span>${esc(e.message)}</span></div>` }
   },
   // pick something new for everyone
