@@ -1754,6 +1754,7 @@ function theater(t, season = 1, episode = 1){
     iframe.title = `${t.title} · VidSrc player`;
     iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
     iframe.referrerPolicy = "strict-origin-when-cross-origin";
+    iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
     iframe.allowFullscreen = true;
     player.appendChild(iframe);
   }
@@ -2713,7 +2714,7 @@ const Room = {
     const f = document.createElement("iframe");
     f.id = "room-vidsrc-player";
     f.src = src.embed; f.title = (src.title || "Video") + " · VidSrc player on the room TV";
-    f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media"; f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
+    f.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media"; f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation"); f.allowFullscreen = true; f.referrerPolicy = "strict-origin-when-cross-origin";
     // VidSrc embeds work directly; no Stellar initialization handshake is required.
     f.addEventListener("load", () => { if (playRequest !== this.playRequest) return; this.staticOn = false; this.playing = true; this.osd("", "") });
     this.screen.insertBefore(f, this.screen.querySelector(".crt"));
@@ -2879,6 +2880,7 @@ async function partyPlayer(host, src, on){
   if (src.kind === "vidsrc") {
     const iframe=document.createElement("iframe"); iframe.src=src.stream.embed;
     iframe.title=src.title+" · VidSrc"; iframe.allow="autoplay; fullscreen; picture-in-picture; encrypted-media";
+    iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
     iframe.allowFullscreen=true; iframe.referrerPolicy="strict-origin-when-cross-origin"; host.appendChild(iframe);
     let seconds=0,total=0,isPlaying=false,ready=false,disposed=false;
     const cmd=(action)=>{if(!disposed && iframe.contentWindow)iframe.contentWindow.postMessage({player:true,action},VIDSRC_ORIGIN)};
