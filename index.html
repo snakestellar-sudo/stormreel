@@ -2561,6 +2561,17 @@ const Views = {
           <p class="muted" style="font-size:12px">Requires TMDB access under Film data above. Letterboxd ratings use the same 0.5–5 scale as StormReel. Films with ambiguous matches are skipped. Ratings alone count as watched, but their dates may be rating dates rather than viewing dates.</p>
         </section>` : ""}
 
+        ${u ? `<section id="jellyfinIntegration" style="margin-top:30px;border-top:1px solid var(--line);padding-top:18px">
+          <div class="sec-h"><h2>Jellyfin Sync</h2><small>Docker connector</small></div>
+          <p class="muted" style="font-size:14px">Connect your Jellyfin watch history to StormReel using the separate Docker sync connector. The connector runs on your server every 15 minutes, even when this page is closed.</p>
+          <div class="panel" style="padding:15px;background:var(--surface-2)">
+            <div class="row" style="justify-content:space-between"><strong>Connection status</strong><span id="jfState" class="muted" role="status">Checking…</span></div>
+            <div id="jfDetails" class="muted" style="font-size:13px;margin-top:9px">Checking for sync reports…</div>
+            <div class="row" style="margin-top:12px"><button class="btn small" id="jfRefresh" type="button">Refresh status</button></div>
+          </div>
+          <p class="muted" style="font-size:12px;margin-top:12px">For security, never enter your Jellyfin password or API key on this page. This dashboard only reads sync reports from your Supabase account. Manual sync requires an authenticated server-side trigger and is not enabled yet.</p>
+        </section>` : ""}
+
         <div class="sec-h" style="margin-top:30px"><h2>Account</h2><small>${Store.mode === "cloud" ? "Synced to the cloud" : "Saved in this browser"}</small></div>
         ${u ? `<p style="margin-top:0">Signed in as <b>@${esc(u.username)}</b></p>
           <div class="row"><button class="btn" id="out">Sign out</button><button class="btn" id="exp">Download my data</button><label class="btn" style="margin:0;color:var(--text)">Import data<input type="file" id="imp" accept="application/json" hidden></label><button class="btn danger" id="del">Delete account</button></div>`
@@ -2576,10 +2587,58 @@ const Views = {
     $("#clrKey").onclick = () => { LocalStore.setSetting("tmdbKey", ""); memCache.clear(); toast("Key cleared"); route() };
     if (!u) return;
     LetterboxdImport.mount();
+    JellyfinDashboard.mount();
     $("#out").onclick = async () => { await act(() => Store.signOut(), "Signed out"); applyTheme(); location.hash = "#/" };
     $("#exp").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(Store.exportMine(), null, 2)], { type: "application/json" })); a.download = `stormreel-${u.username}.json`; a.click() };
     $("#imp").onchange = async e => { const f = e.target.files[0]; if (!f) return; let o; try { o = JSON.parse(await f.text()) } catch { return toast("That file couldn't be read.") } await act(() => Store.importMine(o), "Imported"); route() };
     $("#del").onclick = async () => { if (confirm("Delete your account and everything in it? This can't be undone.")) { await act(() => Store.deleteAccount(), "Account deleted"); applyTheme(); location.hash = "#/" } };
+  }
+};
+
+/* Jellyfin dashboard: optional read-only status table; never expose server secrets. */
+const JellyfinDashboard = {
+  async refresh(){
+    const state = document.getElementById('jfState');
+    const details = document.getElementById('jfDetails');
+    if (!state || !details) return;
+    if (Store.mode !== 'cloud' || !CloudStore.uid || !CloudStore.sb) {
+      state.textContent = 'Cloud account required';
+      details.textContent = 'Sign in to a Supabase-backed StormReel account to see connector reports.';
+      return;
+    }
+    state.textContent = 'Checking…';
+    const {data,error} = await CloudStore.sb.from('jellyfin_sync_status')
+      .select('last_success_at,last_attempt_at,last_error,movies_synced,ratings_synced,episodes_synced,connector_version')
+      .eq('user_id',CloudStore.uid).maybeSingle();
+    if (!document.getElementById('jfState')) return;
+    if (error) {
+      state.textContent = 'Status not configured';
+      details.textContent = 'Sync reports are unavailable. Install the optional jellyfin_sync_status database migration and configure the Docker connector to report status. Movie imports may still work independently.';
+      return;
+    }
+    if (!data) {
+      state.textContent = 'No sync reports yet';
+      details.textContent = 'The connector has not reported a successful sync for this account. This does not necessarily mean that movie syncing is disabled.';
+      return;
+    }
+    const stamp = data.last_success_at ? Date.parse(data.last_success_at) : NaN;
+    const age = Number.isFinite(stamp) ? Date.now()-stamp : Infinity;
+    state.textContent = data.last_error ? 'Needs attention' : age < 45*60*1000 ? 'Recently synced' : 'Last sync not recent';
+    const parts = [data.last_success_at ? 'Last successful sync: '+new Date(data.last_success_at).toLocaleString() : 'No successful sync reported'];
+    for (const [key,label] of [['movies_synced','Movies'],['ratings_synced','Ratings'],['episodes_synced','Episodes']]) {
+      if (data[key] != null) parts.push(label+': '+Number(data[key]));
+    }
+    if (data.last_error) parts.push('Last error: '+String(data.last_error).slice(0,300));
+    details.textContent = parts.join(' · ');
+  },
+  mount(){
+    const btn=document.getElementById('jfRefresh');
+    if(!btn)return;
+    btn.onclick=()=>this.refresh().catch(e=>{
+      const el=document.getElementById('jfState');if(el)el.textContent='Unable to check status';
+      console.warn('Jellyfin status check failed',e);
+    });
+    btn.click();
   }
 };
 
