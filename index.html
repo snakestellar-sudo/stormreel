@@ -3178,21 +3178,31 @@ function nextEpisode(e){
 async function continueHook(t){
   const play = $("#play"); if (!play) return;
   const sp = $("#playSeason"), ep = $("#playEpisode");
-  // runs before the page's own Play handler (capture phase) and never stops it
+  // Keep the existing Play handler and player behavior unchanged.
   play.addEventListener("click", () => {
     const patch = { t: progSnap(t) };
     if (t.type === "tv") { patch.season = Number(sp?.value || 1); patch.episode = Number(ep?.value || 1) }
     Progress.save(t.id, patch);
   }, true);
-  const e = await Progress.get(t.id); if (!e || !play.isConnected) return;
-  if (t.type === "tv" && e.season && sp) {
-    sp.value = String(e.season); sp.dispatchEvent(new Event("change"));
+  const e = await Progress.get(t.id);
+  if (!play.isConnected) return;
+  if (t.type === "tv" && e?.season && sp) {
+    sp.value = String(e.season);
+    sp.dispatchEvent(new Event("change"));
     if (ep) ep.value = String(e.episode || 1);
-    const label = [...play.childNodes].reverse().find(n => n.nodeType === 3 && n.textContent.trim());
-    if (label) label.textContent = `Continue S${e.season} · E${e.episode || 1}`;
   }
-  if (canResume(t.id) && e.pos > 15 && (!e.dur || e.pos < e.dur - 30) && !$("#resumeBtn"))
-    play.insertAdjacentHTML("beforebegin", `<a class="btn primary play" id="resumeBtn" href="${Streams.find(t) ? `#/title/${encodeURIComponent(t.id)}` : `#/watch/${encodeURIComponent(t.id)}`}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>Resume ${clock(e.pos)}</a>`);
+  // One button only: the regular Play action already opens VidSrc at the saved position.
+  // Also recognize older VidSrc-only progress saved before the unified progress tracker.
+  const stream = Streams.find(t, Number(sp?.value || 1), Number(ep?.value || 1));
+  const legacy = stream && VidSrcProgress.get(stream.tmdbId, stream.season, stream.episode);
+  const position = Math.max(Number(e?.pos) || 0, Number(legacy?.watched) || 0);
+  const duration = Number(e?.dur) || Number(legacy?.duration) || 0;
+  const resumable = position > 15 && (!duration || position < duration - 30);
+  const label = [...play.childNodes].reverse().find(n => n.nodeType === 3 && n.textContent.trim());
+  if (label) label.textContent = resumable ? `Resume ${clock(position)}` : "Play now";
+  play.setAttribute("aria-label", resumable ? `Resume ${t.title} at ${clock(position)}` : `Play ${t.title}`);
+  // Remove an obsolete separate Resume link if an older page injected one.
+  $("#resumeBtn")?.remove();
 }
 
 // Home: the first row. Wide backdrop cards, a progress bar, and one-tap "next episode".
