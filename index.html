@@ -123,13 +123,27 @@ nav a.on{color:var(--text);background:var(--surface-2);box-shadow:inset 0 -2px 0
 .search{display:flex;position:relative}
 .search input{width:100%;padding:8px 12px 8px 34px;border-radius:9px;border:1px solid var(--line);background:var(--surface)}
 .search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
-body[data-route="/"] .search{display:none}
+/* header search: on the home page it waits until the big hero search scrolls away, then slides in */
+.search{transition:flex-basis .45s cubic-bezier(.2,.8,.2,1),min-width .45s cubic-bezier(.2,.8,.2,1),opacity .3s,transform .45s}
+body[data-route="/"]:not(.hs-gone) .search{flex-basis:0;min-width:0;opacity:0;transform:translateX(18px) scale(.96);pointer-events:none;overflow:hidden}
+body[data-route="/"].hs-gone .search input{animation:sglow 1.1s ease}
+@keyframes sglow{0%{box-shadow:0 0 0 0 rgba(var(--glow-rgb),.75)}100%{box-shadow:0 0 0 12px rgba(var(--glow-rgb),0)}}
+.search::after{content:"/";position:absolute;right:9px;top:50%;transform:translateY(-50%);font:700 11px/1 Manrope,sans-serif;color:var(--muted);border:1px solid var(--line);border-radius:5px;padding:3px 6px;pointer-events:none}
+.search:focus-within::after{display:none}
+.search input{padding-right:34px}
+.sbtn{display:none;place-items:center;width:36px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--surface);color:var(--accent)}
+.sbtn svg{width:17px;height:17px}
 .who{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
 .wx{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:700;color:var(--muted)}
 .wx svg{width:16px;height:16px;color:var(--accent)}
 .wx:hover{color:var(--text)}
 @media (max-width:640px){
-  .search{display:none}
+  .sbtn{display:grid}
+  body[data-route="/"]:not(.hs-gone) .sbtn{display:none}
+  .search{display:none;position:fixed;left:16px;right:16px;top:100px;z-index:60}
+  .search::after{display:none}
+  body.search-open .search{display:flex;opacity:1;transform:none;pointer-events:auto;min-width:0;flex-basis:auto;overflow:visible}
+  body.search-open .search input{padding:12px 14px 12px 36px;font-size:16px;box-shadow:0 18px 40px -12px rgba(0,0,0,.7)}
   .wx span{display:none}
   .word{font-size:22px}
 }
@@ -400,6 +414,43 @@ body[data-route="/room"]{overflow:hidden}
 @media (max-width:640px){.remote .np{min-width:0;flex-basis:100%;margin:0;text-align:center}}
 @media (prefers-reduced-motion:reduce){.room *{animation:none!important}.room-stage{transition:none}}
 
+/* ============ WATCH PARTY ============ */
+.party{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:22px;align-items:start;position:relative}
+.party::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--bd) center/cover no-repeat;opacity:.13;filter:blur(18px);pointer-events:none}
+@media (max-width:980px){.party{grid-template-columns:1fr}}
+.party-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.party-top h1{font-size:clamp(30px,4.4vw,46px)}
+.invite{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.code{display:flex;gap:5px}
+.code span{display:grid;place-items:center;width:34px;height:42px;border-radius:8px;background:var(--surface-2);border:1px solid var(--line);font:900 24px/1 var(--display);color:var(--accent);text-shadow:0 0 12px rgba(var(--glow-rgb),.6)}
+.party-screen{position:relative;aspect-ratio:16/9;width:100%;border-radius:16px;overflow:hidden;background:#000;
+  box-shadow:0 0 0 1px rgba(var(--glow-rgb),.45),0 0 90px -20px rgba(var(--glow-rgb),.6)}
+.party-screen iframe,.party-screen video{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000}
+.party-wait{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:6px;text-align:center;padding:20px;color:#e9eefb}
+.party-wait span{color:#93a0b8;font-size:14px;max-width:360px}
+.pulse svg{width:42px;height:42px;fill:var(--accent);filter:drop-shadow(0 0 14px rgba(var(--glow-rgb),.9));animation:pulse2 1.6s ease-in-out infinite}
+@keyframes pulse2{50%{transform:scale(1.15);opacity:.6}}
+.party-tap{margin-top:12px;width:100%;justify-content:center}
+.party-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+.party-bar .status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:14px}
+.party-bar .status .av{width:22px;height:22px;font-size:11px}
+.party-side{position:sticky;top:120px;display:flex;flex-direction:column}
+.members{display:flex;flex-direction:column;gap:8px}
+.member{display:flex;align-items:center;gap:8px;font-size:14px}
+.member .chip{font-size:11px;padding:1px 7px}
+.pchat{height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding:4px 2px 10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.pchat .msg{display:flex;gap:8px;font-size:14px}
+.pchat .msg p{margin:1px 0 0;overflow-wrap:anywhere}
+.pchat .sys{font-size:12px;color:var(--muted);text-align:center}
+.reacts{display:flex;gap:4px;margin-top:10px;justify-content:space-between}
+.reacts button{flex:1;border:1px solid var(--line);background:var(--surface-2);border-radius:9px;padding:6px 0;font-size:18px;transition:transform .15s}
+.reacts button:hover{transform:translateY(-2px) scale(1.08)}
+.floater{position:absolute;bottom:12%;font-size:34px;pointer-events:none;z-index:5;animation:floatup 2.6s ease-out forwards;filter:drop-shadow(0 4px 10px rgba(0,0,0,.6))}
+@keyframes floatup{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1;transform:translateY(-20px) scale(1.15)}100%{transform:translateY(-220px) scale(1);opacity:0}}
+.party-landing{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:18px}
+.codein{font:900 22px/1 var(--display);letter-spacing:.3em;text-transform:uppercase;max-width:220px}
+#partyBtn svg{width:17px;height:17px}
+
 /* ============ LISTS ============ */
 .list{display:flex;flex-direction:column;gap:8px}
 .li{display:flex;gap:14px;align-items:center;padding:10px 12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
@@ -448,6 +499,7 @@ footer .word{font-size:18px;color:var(--text);display:block;margin-bottom:8px}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" placeholder="Search" aria-label="Search films and series">
       </form>
+      <button class="sbtn" id="sbtn" type="button" aria-label="Search" title="Search (/)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
       <button class="wx" id="wx" title="Change the weather"></button>
       <div class="who" id="who"></div>
     </div>
@@ -1870,7 +1922,7 @@ async function homeFriends(){
 function chrome(path){
   const u = Store.me();
   document.body.dataset.route = path;
-  const links = [["/", "Discover"], ["/genre", "Genres"], ["/room", "Rain Room"], ["/watchlist", "Watchlist"], ["/diary", "Diary"], ["/collections", "Collections"], ["/friends", "Friends"], ["/settings", "Settings"]];
+  const links = [["/", "Discover"], ["/genre", "Genres"], ["/room", "Rain Room"], ["/party", "Watch Party"], ["/watchlist", "Watchlist"], ["/diary", "Diary"], ["/collections", "Collections"], ["/friends", "Friends"], ["/settings", "Settings"]];
   $("#nav").innerHTML = links.map(([h, l]) => `<a href="#${h}" class="${path === h ? "on" : ""}">${l}</a>`).join("");
   $("#who").innerHTML = u ? `<a class="btn small" href="#/settings" title="Signed in">@${esc(u.username)}</a>` : `<a class="btn small primary" href="#/login">Sign in</a>`;
   wxButton();
@@ -1896,6 +1948,7 @@ const Views = {
       ${SHELVES.map((s, i) => `<section class="sec shelf" data-i="${i}"><div class="sec-h"><h2>${esc(s.title)}</h2>${s.genre ? `<a class="muted" style="font-size:13px" href="#/genre/${s.genre}${s.type === "tv" ? "/tv" : ""}">See all →</a>` : s.sub ? `<small>${esc(s.sub)}</small>` : ""}</div><div class="shelf-body">${skelRail()}</div></section>`).join("")}` : ""}`;
     $("#heroSearch").onsubmit = e => { e.preventDefault(); const q = $("#hq").value.trim(); if (q) { Storm.strike(); location.hash = "#/search/" + encodeURIComponent(q) } };
     attachSuggest($("#hq"), $("#heroSearch"));
+    watchHeroSearch();
     homeFriends();
     const fill = async (sel, fn, r) => { const el = $(sel); if (!el) return; try { const list = await fn(); el.innerHTML = r ? rail(list, true) : grid(list.slice(0, 18)) } catch (e) { el.innerHTML = empty("Signal lost", esc(e.message)) } };
     if (p === TMDBProvider) {
@@ -1925,6 +1978,22 @@ const Views = {
 
   // #/room or #/room/<title id>: the Rain Room (full-screen scene, see section 5)
   room(id){ app.innerHTML = ""; Room.open(id) },
+
+  // #/party: start or join one; #/party/<CODE>[/<title id>]: the party itself (section 6)
+  party(arg){
+    if (arg) { const [code, ...rest] = arg.split("/"), c = code.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6); return Party.open(c, rest.join("/") || null) }
+    app.innerHTML = `<h1>Watch party</h1>
+      <p class="muted" style="max-width:640px;margin-top:-6px">Watch together from different places. Play, pause and skipping stay in sync for everyone, with a chat on the side.</p>
+      <div class="party-landing">
+        <form class="panel" id="joinParty"><h2>Join a party</h2><p class="muted" style="margin:6px 0 12px">Enter the 6-letter code your friend sent, or just open their link.</p>
+          <div class="row" style="flex-wrap:nowrap"><input class="f codein" id="pcode" maxlength="6" placeholder="ABC123" autocomplete="off" autocapitalize="characters" spellcheck="false"><button class="btn primary">Join</button></div></form>
+        <div class="panel"><h2>Start one</h2><p class="muted" style="margin:6px 0 0">Pick a free film below, or press <b>Watch party</b> on any title page to watch its trailer together.</p></div>
+      </div>
+      <section class="sec"><div class="sec-h"><h2>Free full films</h2><small>Click one to start a party</small></div><div id="plFree">${skelGrid(8)}</div></section>`;
+    $("#pcode").oninput = e => { e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "") };
+    $("#joinParty").onsubmit = e => { e.preventDefault(); const c = $("#pcode").value; if (c.length === 6) location.hash = "#/party/" + c; else toast("Codes are 6 letters and numbers.") };
+    freeFilms().then(list => { if (!$("#plFree")) return; $("#plFree").innerHTML = grid(list); $("#plFree").onclick = e => { const a = e.target.closest("a.card"); if (!a) return; e.preventDefault(); location.hash = "#/party/" + newPartyCode() + "/" + a.getAttribute("href").split("/").pop() } });
+  },
 
   // #/genre            -> all genres
   // #/genre/horror     -> horror films;  #/genre/crime/tv -> crime series
@@ -2026,6 +2095,7 @@ const Views = {
       theater(t, selectedSeason, selectedEpisode);
     });
     watchSpot(t);   // "This page / Rain Room" toggle
+    partyButton(t); // "Watch party" (free films and trailers)
     if (!u) return;
     // Everything below updates the page in place (no re-render), so a playing video keeps playing.
     wireRating(t);
@@ -2707,6 +2777,272 @@ const Room = {
   }
 };
 
+/* =====================================================================
+   6. WATCH PARTY   (#/party   or   #/party/<CODE>   or   #/party/<CODE>/<title id>)
+   Friends join with a link or a 6-letter code and the video stays in sync:
+   play, pause and seeking are shared, and a late joiner lands at the same
+   moment. Sync runs over Supabase Realtime (broadcast + presence), so no
+   database tables are needed and nothing is stored.
+   The party plays sources the site can control directly: the free full
+   films (Blender open movies on YouTube, public-domain classics as MP4s
+   from the Internet Archive) and the official trailer of any title.
+   ===================================================================== */
+// One full-length MP4 per public-domain classic (Internet Archive), so the party player can control it.
+const PARTY_MP4 = {
+  "tmdb:movie:10331": "Night.Of.The.Living.Dead_1080p/NightOfTheLivingDead_720p.mp4",
+  "tmdb:movie:653":   "Nosferatu_most_complete_version_93_mins./Nosferatu_1922_Symphony_of_Horror_512kb.mp4",
+  "tmdb:movie:3085":  "his_girl_friday/his_girl_friday.mp4",
+  "tmdb:movie:961":   "The_General_Buster_Keaton/The_General.mp4",
+  "tmdb:movie:20367": "Detour/Detour.mp4",
+  "tmdb:movie:24452": "The_Little_Shop_of_Horrors.mpeg/The_Little_Shop_of_Horrors.mp4",
+  "tmdb:movie:16093": "CarnivalofSouls/CarnivalOfSouls.mp4",
+  "tmdb:movie:21159": "the-last-man-on-earth-1964_202312/The Last Man on Earth (1964).mp4"
+};
+const PARTY_ABC = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const newPartyCode = () => Array.from(crypto.getRandomValues(new Uint8Array(6)), b => PARTY_ABC[b % PARTY_ABC.length]).join("");
+const partyLink = code => location.origin + location.pathname + "#/party/" + code;
+const clock = s => { s = Math.max(0, s | 0); const h = s / 3600 | 0, m = (s % 3600) / 60 | 0, x = s % 60; return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(x).padStart(2, "0") };
+function partyName(){
+  if (Store.me()) return Store.me().username;
+  let g = LocalStore.settings().guestName;
+  if (!g) { g = "guest_" + newPartyCode().slice(0, 4).toLowerCase(); LocalStore.setSetting("guestName", g) }
+  return g;
+}
+// What the party can play for a title (null = nothing it can sync).
+async function partySource(id){
+  const f = OpenFilms.films[id], t = await Providers.for(id)?.details(id).catch(() => null);
+  const title = t?.title || "Untitled";
+  if (f?.yt) return { kind: "yt", vid: f.yt, label: "Full film", title, t };
+  if (PARTY_MP4[id]) return { kind: "mp4", url: "https://archive.org/download/" + PARTY_MP4[id].split("/").map(encodeURIComponent).join("/"), label: "Full film", title, t };
+  if (t?.trailer) return { kind: "yt", vid: t.trailer, label: "Trailer", title, t };
+  return null;
+}
+
+// ---------- a player the party can drive: YouTube (IFrame API) or a plain <video> ----------
+let ytApi;
+function loadYouTubeApi(){
+  return ytApi ||= new Promise((ok, no) => {
+    if (window.YT?.Player) return ok();
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { prev?.(); ok() };
+    loadScript("https://www.youtube.com/iframe_api").catch(e => { ytApi = null; no(e) });
+  });
+}
+async function partyPlayer(host, src, on){
+  host.innerHTML = "";
+  if (src.kind === "yt") {
+    await loadYouTubeApi();
+    const div = document.createElement("div"); host.appendChild(div);
+    let p, lastT = 0;
+    await new Promise((ok, no) => { setTimeout(() => no(new Error("YouTube didn't respond. Try again.")), 15000); p = new YT.Player(div, { videoId: src.vid, host: "https://www.youtube-nocookie.com",
+      playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+      events: { onReady: ok, onStateChange: e => { if (e.data === 1) on("play"); else if (e.data === 2) on("pause"); else if (e.data === 0) on("ended") } } }) });
+    // YouTube has no "seeked" event, so watch for jumps in the clock
+    const iv = setInterval(() => { const t = p.getCurrentTime?.() || 0, st = p.getPlayerState?.(); if (Math.abs(t - (lastT + (st === 1 ? .5 : 0))) > 1.3) on("seek"); lastT = t }, 500);
+    return { play: () => p.playVideo(), pause: () => p.pauseVideo(), seek: s => { p.seekTo(s, true); lastT = s }, time: () => p.getCurrentTime?.() || 0,
+      playing: () => p.getPlayerState?.() === 1, destroy: () => { clearInterval(iv); try { p.destroy() } catch {} } };
+  }
+  const v = document.createElement("video");
+  v.src = src.url; v.controls = true; v.playsInline = true; v.preload = "auto";
+  host.appendChild(v);
+  v.onplay = () => on("play"); v.onpause = () => { if (!v.seeking) on("pause") }; v.onseeked = () => on("seek"); v.onended = () => on("ended");
+  await new Promise(ok => { v.onloadedmetadata = ok; v.onerror = ok; setTimeout(ok, 9000) });
+  return { play: () => v.play(), pause: () => v.pause(), seek: s => { v.currentTime = s }, time: () => v.currentTime || 0,
+    playing: () => !v.paused && !v.ended, destroy: () => { v.pause(); v.removeAttribute("src"); v.load() } };
+}
+
+// ---------- the party ----------
+let closeParty = null;
+const Party = {
+  async open(code, startId){
+    closeParty?.();
+    const sb = Store.sb || CloudStore.sb;
+    if (!sb) { app.innerHTML = empty("Parties need the cloud", "Watch parties sync through the site's Supabase project, which isn't connected right now."); return }
+    const me = { id: crypto.randomUUID(), name: partyName(), joined: Date.now() };
+    Object.assign(this, { code, me, sb, v: 0, p: null, src: null, titleId: null, want: false, quietUntil: 0, members: [], gotState: false, alive: true });
+    app.innerHTML = `
+      <div class="party">
+        <div class="party-main">
+          <div class="party-top">
+            <div><p class="kicker" style="margin:0 0 4px">Watch party</p><h1 id="ptTitle" style="margin:0">Getting the room ready…</h1><div class="muted" id="ptKind"></div></div>
+            <div class="invite panel">
+              <small class="muted">Invite with this code</small>
+              <div class="code" id="ptCode">${code.split("").map(c => `<span>${c}</span>`).join("")}</div>
+              <div class="row" style="gap:6px"><button class="btn small primary" id="ptCopy">Copy invite link</button>${navigator.share ? `<button class="btn small" id="ptShare">Share</button>` : ""}</div>
+            </div>
+          </div>
+          <div class="party-screen" id="ptScreen"><div class="party-wait"><div class="pulse">${BOLT}</div><b>Waiting for the host…</b><span>The video appears as soon as someone in the party picks something to watch.</span></div></div>
+          <button class="btn primary party-tap" id="ptTap" hidden>Tap to sync with the party</button>
+          <div class="party-bar"><div class="status" id="ptStatus">Connecting…</div>
+            <div class="row" style="gap:6px"><button class="btn small" id="ptResync" title="Jump to where the party is">Resync</button><button class="btn small" id="ptPickBtn">Change what's playing</button><button class="btn small danger" id="ptLeave">Leave</button></div></div>
+          <div id="ptPick" hidden class="panel" style="margin-top:14px">
+            <div class="tabs" style="margin-bottom:12px"><button class="btn small on" data-pk="free">Free full films</button><button class="btn small" data-pk="trailers">Trailers</button></div>
+            <form id="ptSearch" class="row" style="margin-bottom:12px" hidden><input class="f" id="ptQ" placeholder="Search any film or series" autocomplete="off" style="max-width:360px"><button class="btn small primary">Search</button></form>
+            <div id="ptList"></div>
+          </div>
+        </div>
+        <aside class="party-side panel">
+          <div class="sec-h"><h2>In the party</h2><small id="ptCount"></small></div>
+          <div id="ptMembers" class="members"></div>
+          <div class="sec-h" style="margin-top:18px"><h2>Chat</h2></div>
+          <div id="ptChat" class="pchat" aria-live="polite"></div>
+          <form id="ptSay" class="row" style="gap:6px;flex-wrap:nowrap"><input class="f" id="ptMsg" maxlength="300" placeholder="Say something" autocomplete="off"><button class="btn small primary">Send</button></form>
+          <div class="reacts">${["🔥", "😂", "😱", "😭", "⚡", "👏"].map(e => `<button type="button" data-react="${e}">${e}</button>`).join("")}</div>
+        </aside>
+      </div>`;
+
+    // invite
+    $("#ptCopy").onclick = async () => { try { await navigator.clipboard.writeText(partyLink(code)); toast("Invite link copied") } catch { prompt("Copy this invite link:", partyLink(code)) } };
+    $("#ptShare")?.addEventListener("click", () => navigator.share({ title: "StormReel watch party", text: `Join my watch party (code ${code})`, url: partyLink(code) }).catch(() => {}));
+    // controls
+    $("#ptLeave").onclick = () => { location.hash = "#/" };
+    $("#ptResync").onclick = () => this.send({ type: "hello", from: this.me.id });
+    $("#ptTap").onclick = () => { $("#ptTap").hidden = true; this.p?.play() };
+    $("#ptPickBtn").onclick = () => { const pk = $("#ptPick"); pk.hidden = !pk.hidden; if (!pk.hidden && !$("#ptList").dataset.loaded) this.pickTab("free") };
+    $("#ptPick").querySelectorAll("[data-pk]").forEach(b => b.onclick = () => this.pickTab(b.dataset.pk));
+    $("#ptSearch").onsubmit = async e => { e.preventDefault(); const q = $("#ptQ").value.trim(); if (!q) return; $("#ptList").innerHTML = skelGrid(6); try { this.pickList(await Providers.active().search(q)) } catch (err) { $("#ptList").innerHTML = empty("Signal lost", esc(err.message)) } };
+    $("#ptList").onclick = e => { const c = e.target.closest("[data-id]"); if (!c) return; e.preventDefault(); $("#ptPick").hidden = true; this.change(c.dataset.id) };
+    // chat + reactions
+    $("#ptSay").onsubmit = e => { e.preventDefault(); const text = $("#ptMsg").value.trim(); if (!text) return; $("#ptMsg").value = ""; const m = { type: "chat", name: this.me.name, text }; this.send(m); this.chat(m) };
+    app.querySelector(".reacts").onclick = e => { const b = e.target.closest("[data-react]"); if (!b) return; const m = { type: "react", name: this.me.name, e: b.dataset.react }; this.send(m); this.react(m) };
+
+    // realtime channel
+    const ch = this.ch = sb.channel("stormreel-party-" + code, { config: { broadcast: { self: false }, presence: { key: me.id } } });
+    ch.on("broadcast", { event: "p" }, ({ payload }) => this.receive(payload));
+    ch.on("presence", { event: "sync" }, () => this.roster());
+    ch.on("presence", { event: "join" }, ({ newPresences }) => newPresences.forEach(x => x.id !== me.id && this.system(`@${x.name} joined`)));
+    ch.on("presence", { event: "leave" }, ({ leftPresences }) => leftPresences.forEach(x => this.system(`@${x.name} left`)));
+    ch.subscribe(async status => {
+      if (status !== "SUBSCRIBED") { if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") $("#ptStatus").textContent = "Can't reach the party server. Check your connection."; return }
+      await ch.track({ id: me.id, name: me.name, joined: me.joined });
+      $("#ptStatus").textContent = "Connected. Everyone here stays in sync.";
+      this.send({ type: "hello", from: me.id });
+      // nobody answered: start what the link asked for (the host's own link carries a title)
+      setTimeout(() => { if (this.alive && !this.gotState && startId) this.change(startId) }, 1600);
+    });
+    // the party's leader keeps everyone honest with a heartbeat
+    this.hb = setInterval(() => { if (this.isLeader() && this.p && this.titleId) this.broadcastState("tick") }, 4000);
+    closeParty = () => { this.alive = false; clearInterval(this.hb); try { this.p?.destroy() } catch {} try { sb.removeChannel(ch) } catch {} closeParty = null };
+    if (startId && !this.gotState) history.replaceState(null, "", "#/party/" + code);
+    $("#ptMsg").addEventListener("keydown", e => e.stopPropagation());
+  },
+
+  send(payload){ this.ch?.send({ type: "broadcast", event: "p", payload }) },
+  isLeader(){ const m = this.members[0]; return !m || m.id === this.me.id },
+  roster(){
+    const st = this.ch.presenceState(), all = Object.values(st).flat();
+    const seen = new Set(); this.members = all.filter(x => !seen.has(x.id) && seen.add(x.id)).sort((a, b) => a.joined - b.joined || (a.id < b.id ? -1 : 1));
+    $("#ptCount").textContent = this.members.length + (this.members.length === 1 ? " person" : " people");
+    $("#ptMembers").innerHTML = this.members.map((m, i) => `<div class="member">${avatar(m.name)}<b>@${esc(m.name)}</b>${m.id === this.me.id ? `<span class="chip">you</span>` : ""}${i === 0 ? `<span class="chip">host</span>` : ""}</div>`).join("");
+  },
+  state(){ return { titleId: this.titleId, playing: this.p ? this.p.playing() : false, t: this.p ? this.p.time() : 0 } },
+  broadcastState(reason, by){ if (!this.titleId) return; this.send({ type: "state", reason, by: by || this.me.name, v: this.v, ...this.state() }) },
+
+  async receive(m){
+    if (!this.alive) return;
+    if (m.type === "hello") { if (this.titleId && (this.isLeader() || m.from === this.me.id)) this.broadcastState("hello") ; return }
+    if (m.type === "chat") return this.chat(m);
+    if (m.type === "react") return this.react(m);
+    if (m.type !== "state") return;
+    if ((m.v || 0) < this.v) return;   // an update about something we've already moved on from
+    this.v = m.v || 0;
+    this.gotState = true;
+    if (m.titleId !== this.titleId) { await this.load(m.titleId); if (m.reason === "change") this.system(`@${m.by} put on ${this.src?.title || "something new"}`) }
+    if (!this.p) return;
+    this.quiet(1200);
+    const target = m.t + (m.playing ? .3 : 0), drift = Math.abs(this.p.time() - target);
+    if (drift > (m.reason === "tick" ? 1.5 : m.playing ? .5 : .15)) this.p.seek(target);   // pauses land on the same frame
+    this.want = m.playing;
+    if (m.playing && !this.p.playing()) { try { await this.p.play() } catch {} setTimeout(() => { if (this.alive && this.want && !this.p.playing()) $("#ptTap").hidden = false }, 1500) }
+    if (!m.playing && this.p.playing()) this.p.pause();
+    if (m.reason === "play" || m.reason === "pause" || m.reason === "seek") this.say(m.by, m.reason, m.t);
+  },
+  // things the local viewer does with the player controls
+  local(evt){
+    if (evt === "play") { const tap = $("#ptTap"); if (tap) tap.hidden = true }   // playing again, whoever started it
+    if (!this.alive || Date.now() < this.quietUntil) return;
+    clearTimeout(this.lt);
+    this.lt = setTimeout(() => {   // a seek fires several events; send one update
+      const reason = evt === "ended" ? "pause" : evt;
+      if (evt === "play") $("#ptTap").hidden = true;
+      this.broadcastState(reason); this.say(this.me.name, reason, this.p.time());
+    }, 180);
+  },
+  quiet(ms){ this.quietUntil = Date.now() + ms },
+  say(who, what, t){
+    const verb = { play: "pressed play", pause: "paused", seek: "jumped" }[what]; if (!verb) return;
+    $("#ptStatus").innerHTML = `${avatar(who)} <b>@${esc(who)}</b> ${verb} at ${clock(t)}`;
+  },
+
+  async load(id){
+    if (!id) return;
+    this.titleId = id; this.p?.destroy(); this.p = null;
+    $("#ptScreen").innerHTML = `<div class="party-wait"><div class="pulse">${BOLT}</div><b>Loading…</b></div>`;
+    const src = this.src = await partySource(id);
+    if (!this.alive || this.titleId !== id) return;
+    if (!src) { $("#ptScreen").innerHTML = `<div class="party-wait"><b>Nothing to play</b><span>This title has no free film or trailer. Pick something else.</span></div>`; $("#ptTitle").textContent = "Pick something to watch"; return }
+    $("#ptTitle").textContent = src.title;
+    $("#ptKind").innerHTML = `${src.label}${src.t?.year ? " · " + esc(src.t.year) : ""} · <a href="#/title/${encodeURIComponent(id)}">Details</a>`;
+    if (src.t?.backdrop) app.querySelector(".party").style.setProperty("--bd", `url('${src.t.backdrop}')`);
+    try { const pl = await partyPlayer($("#ptScreen"), src, e => this.local(e)); if (this.titleId !== id || !this.alive) { pl.destroy(); return } this.p = pl }
+    catch (e) { $("#ptScreen").innerHTML = `<div class="party-wait"><b>Couldn't load the player</b><span>${esc(e.message)}</span></div>` }
+  },
+  // pick something new for everyone
+  async change(id){
+    this.v += 1; this.gotState = true;
+    this.send({ type: "state", reason: "change", by: this.me.name, v: this.v, titleId: id, playing: false, t: 0 });   // tell everyone first
+    await this.load(id);
+    if (!this.p || this.titleId !== id) return;
+    this.quiet(800);
+    this.system(`You put on ${this.src.title}. Press play when everyone's ready.`);
+  },
+  async pickTab(which){
+    $("#ptPick").querySelectorAll("[data-pk]").forEach(b => b.classList.toggle("on", b.dataset.pk === which));
+    $("#ptSearch").hidden = which !== "trailers"; $("#ptList").dataset.loaded = "1"; $("#ptList").innerHTML = skelGrid(6);
+    try { this.pickList(which === "free" ? await freeFilms() : await Providers.active().trending()) } catch (e) { $("#ptList").innerHTML = empty("Signal lost", esc(e.message)) }
+  },
+  pickList(items){
+    items = items.filter(t => t && t.poster);
+    $("#ptList").innerHTML = items.length ? `<div class="grid">${items.map(t => `<a href="#" class="card" data-id="${esc(t.id)}"><div class="poster">${posterImg(t)}<span class="tag">${OpenFilms.find(t.id) ? "Full film" : "Trailer"}</span></div><div class="t">${esc(t.title)}</div></a>`).join("")}</div>` : empty("Nothing found", "Try another search.");
+  },
+
+  chat(m){ this.line(`${avatar(m.name)}<div><b>@${esc(m.name)}</b><p>${esc(m.text)}</p></div>`, "msg") },
+  system(text){ this.line(`<span>${esc(text)}</span>`, "sys") },
+  line(html, cls){ const c = $("#ptChat"); if (!c) return; c.insertAdjacentHTML("beforeend", `<div class="${cls}">${html}</div>`); c.scrollTop = c.scrollHeight; while (c.children.length > 120) c.firstElementChild.remove() },
+  react(m){
+    const s = $("#ptScreen"); if (!s) return;
+    const el = document.createElement("div"); el.className = "floater"; el.textContent = m.e;
+    el.style.left = (12 + Math.random() * 76) + "%"; el.title = "@" + m.name;
+    s.appendChild(el); setTimeout(() => el.remove(), 2600);
+  }
+};
+
+// "Watch party" button beside Play, when the title has something the party can sync.
+function partyButton(t){
+  const play = $("#play"); if (!play || $("#partyBtn") || !(OpenFilms.films[t.id] || PARTY_MP4[t.id] || t.trailer)) return;
+  const anchor = $("#watchSpot") || play;
+  anchor.insertAdjacentHTML("afterend", `<button class="btn" id="partyBtn" title="Watch together, in sync"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4"/><circle cx="17" cy="9" r="2.6"/><path d="M16 14.2c2.7.1 4.6 1.9 5 4.8"/></svg>Watch party${OpenFilms.films[t.id] ? "" : " (trailer)"}</button>`);
+  $("#partyBtn").onclick = () => { location.hash = "#/party/" + newPartyCode() + "/" + encodeURIComponent(t.id) };
+}
+
+// Home page: the header search stays tucked away while the big hero search is on screen.
+let heroIO = null;   // { disconnect() } for the current home page
+function watchHeroSearch(){
+  heroIO?.disconnect(); document.body.classList.remove("hs-gone");
+  const f = $("#heroSearch"); if (!f) return;
+  let raf = 0;
+  const check = () => {
+    raf = 0; if (!f.isConnected) return;
+    const gone = f.getBoundingClientRect().bottom < ($("header")?.offsetHeight || 100) + 8;   // tucked under the header
+    document.body.classList.toggle("hs-gone", gone);
+    if (!gone) document.body.classList.remove("search-open");
+  };
+  const onScroll = () => { if (!raf) raf = requestAnimationFrame(check) };
+  addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll);
+  heroIO = { disconnect(){ removeEventListener("scroll", onScroll); removeEventListener("resize", onScroll); cancelAnimationFrame(raf) } };
+  check();
+}
+
 /* ---------- router ---------- */
 function route(){
   const h = location.hash.slice(1) || "/";
@@ -2715,6 +3051,8 @@ function route(){
   chrome("/" + seg);
   closeTheater?.();
   closeRoom?.();
+  closeParty?.();
+  heroIO?.disconnect(); document.body.classList.remove("search-open");
   app.onclick = null;
   app.style.animation = "none"; void app.offsetWidth; app.style.animation = "";
   window.scrollTo(0, 0);
@@ -2745,6 +3083,18 @@ async function boot(){
   applyTheme();
   $("#searchForm").addEventListener("submit", e => { e.preventDefault(); const q = $("#q").value.trim(); if (q) { Storm.strike(); location.hash = "#/search/" + encodeURIComponent(q) } });
   attachSuggest($("#q"), $("#searchForm"));
+  // "/" jumps to search from anywhere; on phones the search icon opens a search bar under the header
+  const openSearch = () => {
+    if (document.body.dataset.route === "/" && !document.body.classList.contains("hs-gone")) return $("#hq")?.focus();
+    document.body.classList.add("search-open"); $("#q").focus(); $("#q").select();
+  };
+  $("#sbtn").onclick = () => document.body.classList.contains("search-open") ? document.body.classList.remove("search-open") : openSearch();
+  $("#q").addEventListener("blur", () => setTimeout(() => { if (!$("#searchForm").contains(document.activeElement)) document.body.classList.remove("search-open") }, 200));
+  $("#searchForm").addEventListener("submit", () => { document.body.classList.remove("search-open"); $("#q").blur() });
+  addEventListener("keydown", e => {
+    if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey && !e.target.closest?.("input,textarea,select,[contenteditable]")) { e.preventDefault(); openSearch() }
+    if (e.key === "Escape") document.body.classList.remove("search-open");
+  });
   $("#wx").addEventListener("click", openForecast);
   addEventListener("keydown", e => { if (e.key === "Escape") closeForecast() });
   $("#logo").addEventListener("click", () => { const r = $("#logo svg").getBoundingClientRect(); Storm.strike({ x: r.left + r.width / 2 }) });
