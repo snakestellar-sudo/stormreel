@@ -865,7 +865,7 @@ const LocalStore = {
   },
   async friendView(name){
     const f = this.d.users[name]; if (!f || !this.me().friends.includes(name)) return null;
-    return { username: f.username, mutual: true, ratings: f.ratings, reviews: f.reviews, history: f.history, titles: f.titles };
+    return { username: f.username, mutual: f.friends.includes(this.me().username), ratings: f.ratings, reviews: f.reviews, history: f.history, watchlist: f.watchlist, titles: f.titles };
   },
   // Everything friends share with you, in one go (only people who have added you back).
   async friendData(){
@@ -889,6 +889,17 @@ const CloudStore = {
   settings(){ return LocalStore.settings() },
   setSetting(k, v){ LocalStore.setSetting(k, v) },
   async w(p){ const r = await p; if (r.error) throw new Error(r.error.message); return r },
+  // Supabase returns at most 1,000 rows per request, so big libraries (e.g. a Letterboxd import)
+  // are fetched in pages. `make` builds a fresh, stably ordered query each time.
+  async pages(make, size = 1000){
+    const rows = [];
+    for (let from = 0; from < 200000; from += size) {
+      const r = await make().range(from, from + size - 1);
+      if (r.error) return { data: null, error: r.error };
+      rows.push(...(r.data || [])); if (!r.data || r.data.length < size) break;
+    }
+    return { data: rows, error: null };
+  },
   async init(){
     this.sb = supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseKey, { auth: { flowType: "implicit", detectSessionInUrl: true, persistSession: true, autoRefreshToken: true } });
     this.sb.auth.onAuthStateChange(ev => { if (ev === "PASSWORD_RECOVERY") this.recovery = true });
@@ -900,8 +911,9 @@ const CloudStore = {
     const q = t => sb.from(t).select("*").eq("user_id", uid);
     const [p, r, v, w, h, c, f] = await Promise.all([
       sb.from("profiles").select("username,theme").eq("id", uid).maybeSingle(),
-      q("ratings"), q("reviews"), q("watchlist").order("added_at", { ascending: false }),
-      q("history").order("watched_at", { ascending: false }).limit(1000),
+      this.pages(() => q("ratings").order("title_id")), this.pages(() => q("reviews").order("title_id")),
+      this.pages(() => q("watchlist").order("added_at", { ascending: false }).order("title_id")),
+      this.pages(() => q("history").order("watched_at", { ascending: false }).order("id")),
       sb.from("collections").select("id,name,created_at,collection_items(title_id,title,added_at)").eq("user_id", uid).order("created_at"),
       sb.from("friends").select("friend_id").eq("user_id", uid)
     ]);
@@ -1018,16 +1030,27 @@ const CloudStore = {
   async friendView(name){
     const id = this.mine._fid[name]; if (!id) return null;
     const sb = this.sb;
-    const [back, r, v, h] = await Promise.all([
-      sb.from("friends").select("user_id").eq("user_id", id).eq("friend_id", this.uid).maybeSingle(),
-      sb.from("ratings").select("*").eq("user_id", id),
-      sb.from("reviews").select("*").eq("user_id", id),
-      sb.from("history").select("*").eq("user_id", id).order("watched_at", { ascending: false }).limit(60)
-    ]);
-    const o = { username: name, mutual: !!back.data, ratings: {}, reviews: {}, history: [], titles: {} };
-    for (const x of r.data || []) { o.ratings[x.title_id] = { stars: Number(x.stars), at: Date.parse(x.updated_at) }; o.titles[x.title_id] = x.title }
-    for (const x of v.data || []) { o.reviews[x.title_id] = { text: x.body }; o.titles[x.title_id] = x.title }
-    for (const x of h.data || []) { o.history.push({ id: x.title_id, at: Date.parse(x.watched_at) }); o.titles[x.title_id] = x.title }
+    const back = await this.w(sb.from("friends").select("user_id").eq("user_id", id).eq("friend_id", this.uid).maybeSingle());
+    const o = { username:name, mutual:!!back.data, ratings:{}, reviews:{}, history:[], watchlist:[], titles:{} };
+    if (!o.mutual) return o;
+    // Supabase defaults to a 1,000-row response limit. Page through the entire
+    // shared library so a large Letterboxd import is not silently truncated.
+    const all = async (table, order) => {
+      const rows=[];
+      for(let offset=0;offset<50000;offset+=500){
+        let q=sb.from(table).select("*").eq("user_id",id);
+        if(order)q=q.order(order,{ascending:false});
+        const result=await this.w(q.range(offset,offset+499));
+        rows.push(...(result.data||[]));
+        if(!result.data||result.data.length<500)break;
+      }
+      return rows;
+    };
+    const [r,v,h,w]=await Promise.all([all("ratings"),all("reviews"),all("history","watched_at"),all("watchlist")]);
+    for(const x of r){o.ratings[x.title_id]={stars:Number(x.stars),at:Date.parse(x.updated_at)};o.titles[x.title_id]=x.title}
+    for(const x of v){o.reviews[x.title_id]={text:x.body,at:Date.parse(x.updated_at)};o.titles[x.title_id]=x.title}
+    for(const x of h){o.history.push({id:x.title_id,at:Date.parse(x.watched_at)});o.titles[x.title_id]=x.title}
+    for(const x of w){o.watchlist.push(x.title_id);o.titles[x.title_id]=x.title}
     return o;
   },
   // Everything friends share with you, in one batch of queries. Row-level security only returns
@@ -1038,9 +1061,9 @@ const CloudStore = {
     const [back, h, r, v, w, c] = await Promise.all([
       sb.from("friends").select("user_id").in("user_id", ids).eq("friend_id", this.uid),
       sb.from("history").select("user_id,title_id,title,watched_at").in("user_id", ids).order("watched_at", { ascending: false }).limit(400),
-      sb.from("ratings").select("user_id,title_id,title,stars,updated_at").in("user_id", ids),
-      sb.from("reviews").select("user_id,title_id,title,body,updated_at").in("user_id", ids),
-      sb.from("watchlist").select("user_id,title_id,title,added_at").in("user_id", ids).order("added_at", { ascending: false }),
+      this.pages(() => sb.from("ratings").select("user_id,title_id,title,stars,updated_at").in("user_id", ids).order("user_id").order("title_id")),
+      this.pages(() => sb.from("reviews").select("user_id,title_id,title,body,updated_at").in("user_id", ids).order("user_id").order("title_id")),
+      this.pages(() => sb.from("watchlist").select("user_id,title_id,title,added_at").in("user_id", ids).order("added_at", { ascending: false }).order("user_id").order("title_id")),
       sb.from("collections").select("user_id,name,created_at,collection_items(title_id,title,added_at)").in("user_id", ids).order("created_at")
     ]);
     const out = Object.fromEntries(Object.keys(fid).map(n => [n, { username: n, mutual: false, history: [], ratings: {}, reviews: {}, watchlist: [], collections: {}, titles: {} }]));
@@ -1082,6 +1105,186 @@ const CloudStore = {
 };
 
 let Store = LocalStore;
+
+/* =====================================================================
+   LETTERBOXD IMPORT — opt-in per signed-in user. Nothing is uploaded
+   until the user reviews the preview and confirms.
+   ===================================================================== */
+const LetterboxdImport = {
+  files: [], rows: [], matched: [], unmatched: [], busy: false,
+  csv(text){
+    text = String(text).replace(/^\uFEFF/, "");
+    const lines = [], row = []; let field = "", quoted = false;
+    for (let i=0;i<text.length;i++) {
+      const c=text[i];
+      if (quoted) { if (c==='"' && text[i+1]==='"') {field+='"';i++} else if(c==='"') quoted=false; else field+=c }
+      else if(c==='"') quoted=true;
+      else if(c===',') {row.push(field);field=""}
+      else if(c==='\n'||c==='\r') { if(c==='\r'&&text[i+1]==='\n') i++;row.push(field);field="";if(row.some(x=>x.trim()))lines.push(row.splice(0));else row.length=0 }
+      else field+=c;
+    }
+    row.push(field); if(row.some(x=>x.trim()))lines.push(row);
+    const head=(lines.shift()||[]).map(x=>x.trim().toLowerCase());
+    return lines.map(cols=>Object.fromEntries(head.map((k,i)=>[k,(cols[i]||'').trim()])));
+  },
+  async unzip(file){
+    if (!window.JSZip) {
+      await new Promise((resolve,reject)=>{
+        const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+        script.onload=resolve;script.onerror=()=>reject(new Error('Could not load the ZIP reader. Try importing CSV files individually.'));
+        document.head.append(script);
+      });
+    }
+    const zip=await JSZip.loadAsync(file), out=[];
+    for(const [name,item] of Object.entries(zip.files)) {
+      const base=name.split('/').pop().toLowerCase();
+      if(!item.dir && ['ratings.csv','watched.csv','diary.csv','reviews.csv','watchlist.csv'].includes(base)) out.push({name:base,text:await item.async('string')});
+    }
+    if(!out.length)throw new Error('No supported Letterboxd CSV files found in the ZIP.');
+    return out;
+  },
+  async prepare(files){
+    if(!Store.me())throw new Error('Sign in before importing.');
+    const parts=[];
+    for(const file of files) {
+      if(file.size>35*1024*1024)throw new Error('File too large (35 MB maximum per file).');
+      if(/\.zip$/i.test(file.name))parts.push(...await this.unzip(file));
+      else if(/\.csv$/i.test(file.name))parts.push({name:file.name.split('/').pop().toLowerCase(),text:await file.text()});
+      else throw new Error('Choose a Letterboxd .zip export or CSV files.');
+    }
+    const supported=new Set(['ratings.csv','watched.csv','diary.csv','reviews.csv','watchlist.csv']);
+    const data={ratings:new Map(),watched:new Map(),diary:[],reviews:new Map(),watchlist:new Map()};
+    let count=0;
+    for(const part of parts){
+      if(!supported.has(part.name))continue;
+      const kind=part.name.replace('.csv','');
+      for(const r of this.csv(part.text)){
+        const title=r.name||r.title,year=Number(r.year);
+        if(!title || !Number.isInteger(year) || year<1870 || year>2100)continue;
+        const key=title.toLowerCase().replace(/\s+/g,' ').trim()+'|'+year;
+        const base={key,title,year,uri:r['letterboxd uri']||'',date:r['watched date']||r.date||'',rating:Number(r.rating)||0,review:r.review||'',tags:r.tags||''};
+        if(kind==='diary')data.diary.push({...base,date:r['watched date']||r.date||''});
+        else if(kind==='ratings')data.ratings.set(key,base);
+        else if(kind==='reviews')data.reviews.set(key,base);
+        else data[kind].set(key,base);
+        count++;
+      }
+    }
+    if(!count)throw new Error('No valid Letterboxd rows found. Export ratings.csv, watched.csv, diary.csv, or the complete ZIP.');
+    const all=new Map();for(const m of [data.ratings,data.watched,data.reviews,data.watchlist])for(const [k,v] of m)all.set(k,v);
+    for(const r of data.diary)all.set(r.key,r);
+    this.data=data;this.rows=[...all.values()];this.matched=[];this.unmatched=[];
+    return {files:parts.map(p=>p.name),titles:this.rows.length,ratings:data.ratings.size,watches:data.watched.size,diary:data.diary.length,reviews:data.reviews.size,watchlist:data.watchlist.size};
+  },
+  date(value){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(value||''))return null;
+    const d=new Date(value+'T12:00:00');return Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===value?d.getTime():null;
+  },
+  async resolve(r){
+    const result=await TMDBProvider.get('/search/movie',{query:r.title,include_adult:'false'});
+    const norm=x=>String(x||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+    const same=(result.results||[]).filter(x=>norm(x.title||x.original_title)===norm(r.title) && Math.abs(Number((x.release_date||'').slice(0,4))-r.year)<=1);
+    const exact=same.filter(x=>Number((x.release_date||'').slice(0,4))===r.year);
+    const candidates=exact.length?exact:same;
+    if(candidates.length!==1)return null; // never silently attach a rating to an ambiguous film
+    return TMDBProvider.norm(candidates[0],'movie');
+  },
+  async match(onProgress){
+    if(!TMDBProvider.ready())throw new Error('A TMDB API key is required to match Letterboxd films. Add it in Settings → Film data first.');
+    this.matched=[];this.unmatched=[];
+    let done=0;const queue=[...this.rows];
+    const worker=async()=>{
+      while(queue.length){
+        const r=queue.shift();
+        try {const title=await this.resolve(r);if(title)this.matched.push({r,title});else this.unmatched.push({...r,reason:'No unique title/year match'})}
+        catch(e){this.unmatched.push({...r,reason:'Lookup failed: '+e.message})}
+        done++;onProgress?.(done,this.rows.length);
+      }
+    };
+    await Promise.all(Array.from({length:Math.min(3,queue.length)},()=>worker()));
+    return {matched:this.matched.length,unmatched:this.unmatched.length};
+  },
+  async save(onProgress){
+    const user=Store.me();if(!user)throw new Error('Please sign in again.');
+    const cloud=Store.mode==='cloud', uid=cloud?Store.uid:null;
+    const ratingRows=[],reviewRows=[],watchRows=[],historyRows=[],seenHistory=new Set(user.history.map(h=>h.id+'|'+new Date(h.at).toISOString().slice(0,10)));
+    const data=this.data, imported={ratings:0,watched:0,reviews:0,watchlist:0};
+    for(const {r,title:t} of this.matched){
+      const id=t.id,key=r.key,shot=snap(t);user.titles[id]=shot;
+      const rated=data.ratings.get(key), review=data.reviews.get(key), diary=data.diary.filter(x=>x.key===key);
+      const score=(rated?.rating||review?.rating||diary.find(x=>x.rating)?.rating||0);
+      if(score>=.5&&score<=5&&!user.ratings[id]){
+        const at=this.date(rated?.date||review?.date||diary[0]?.date)||Date.now();
+        user.ratings[id]={stars:score,at};ratingRows.push({user_id:uid,title_id:id,title:shot,stars:score,updated_at:new Date(at).toISOString()});imported.ratings++;
+      }
+      const body=review?.review||diary.find(x=>x.review)?.review;
+      if(body&&!user.reviews[id]){
+        const at=this.date(review?.date||diary[0]?.date)||Date.now();user.reviews[id]={text:body,at};
+        reviewRows.push({user_id:uid,title_id:id,title:shot,body,updated_at:new Date(at).toISOString()});imported.reviews++;
+      }
+      const watchDates=diary.length?diary.map(x=>x.date):data.watched.has(key)?[data.watched.get(key).date]:[rated?.date||review?.date].filter(Boolean);
+      // A rating implies watched, but its Date is a rating date, not necessarily a watch date.
+      if(!watchDates.length && (rated||review))watchDates.push('');
+      for(const date of watchDates){
+        const at=this.date(date)||Date.now(),token=id+'|'+new Date(at).toISOString().slice(0,10);
+        if(seenHistory.has(token))continue;
+        seenHistory.add(token);user.history.push({id,at});historyRows.push({user_id:uid,title_id:id,title:shot,watched_at:new Date(at).toISOString()});imported.watched++;
+      }
+      if(data.watchlist.has(key)&&!user.watchlist.includes(id)&&!watchDates.length){
+        user.watchlist.push(id);watchRows.push({user_id:uid,title_id:id,title:shot});imported.watchlist++;
+      }
+    }
+    user.history.sort((a,b)=>b.at-a.at);
+    if(cloud){
+      const batches=[['ratings',ratingRows,true],['reviews',reviewRows,true],['history',historyRows,false],['watchlist',watchRows,true]];
+      let done=0,total=batches.reduce((n,x)=>n+x[1].length,0);
+      try {
+        for(const [table,rows,upsert] of batches)for(let i=0;i<rows.length;i+=75){
+          const part=rows.slice(i,i+75);
+          await Store.w(upsert?Store.sb.from(table).upsert(part):Store.sb.from(table).insert(part));
+          done+=part.length;onProgress?.(done,total);
+        }
+      }finally{await Store.reload()}
+    }else LocalStore.commit();
+    return imported;
+  },
+  downloadUnmatched(){
+    const quote=x=>'"'+String(x??'').replace(/"/g,'""')+'"';
+    const csv='Name,Year,Reason\n'+this.unmatched.map(r=>[r.title,r.year,r.reason].map(quote).join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='stormreel-letterboxd-unmatched.csv';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),30000);
+  },
+  mount(){
+    const root=document.querySelector('#lbImport');if(!root)return;
+    const file=root.querySelector('#lbFiles'),status=root.querySelector('#lbStatus'),go=root.querySelector('#lbGo');
+    const report=t=>{status.textContent=t};
+    file.onchange=async()=>{
+      go.disabled=true;this.matched=[];this.unmatched=[];
+      if(!file.files.length)return;
+      try{const info=await this.prepare([...file.files]);
+        report(`${info.titles} distinct films found in ${info.files.join(', ')}. ${info.ratings} ratings, ${info.watches} watched entries, ${info.diary} diary entries, ${info.reviews} reviews, ${info.watchlist} watchlist entries. No data imported yet.`);
+        go.disabled=false;
+      }catch(e){report('Error: '+e.message)}
+    };
+    go.onclick=async()=>{
+      if(this.busy)return;this.busy=true;go.disabled=true;file.disabled=true;
+      try{
+        report('Matching films with TMDB…');await this.match((done,total)=>report(`Matching films with TMDB: ${done} / ${total}…`));
+        const n=this.matched.length,miss=this.unmatched.length;
+        if(!n){report(`No films matched. ${miss} unmatched. Nothing was imported.`);return}
+        const ok=confirm(`Letterboxd import preview:\n\n${n} films matched with TMDB.\n${miss} could not be matched and will be skipped.\n\nImport matched watches, ratings, reviews and watchlist entries into @${Store.me().username}? Existing ratings and reviews will not be overwritten.`);
+        if(!ok){report(`Cancelled. ${n} matched; ${miss} unmatched. Nothing was imported.`);return}
+        report('Saving to your account…');const result=await this.save((done,total)=>report(`Saving to your account: ${done} / ${total} records…`));
+        report(`Imported ${result.watched} watches, ${result.ratings} ratings, ${result.reviews} reviews, ${result.watchlist} watchlist entries. ${miss} films skipped. Re-importing will not duplicate the same film/date.`);
+        toast('Letterboxd import complete!');
+      }catch(e){report('Import stopped: '+e.message);console.error(e)}
+      finally{
+        this.busy=false;file.disabled=false;go.disabled=false;
+        const old=root.querySelector('#lbUnmatched');old?.remove();
+        if(this.unmatched.length){const b=document.createElement('button');b.className='btn small';b.id='lbUnmatched';b.textContent=`Download ${this.unmatched.length} unmatched films`;b.onclick=()=>this.downloadUnmatched();status.after(b)}
+      }
+    };
+  }
+};
 
 /* =====================================================================
    3. THE STORM  (animated canvas sky: clouds, rain, lightning)
@@ -2258,16 +2461,45 @@ const Views = {
   },
 
   async user(name){
-    const u = Store.me(); if (!u) return needLogin();
-    app.innerHTML = skelGrid(6);
-    const f = await act(() => Store.friendView(name));
-    if (!f) { app.innerHTML = empty("Not on your list", `Add @${esc(name)} as a friend first. <a href="#/friends">Friends</a>`); return }
-    if (!f.mutual) { app.innerHTML = `<h1>@${esc(name)}</h1>` + empty("Not shared yet", `@${esc(name)} hasn't added you back, so their diary is private for now.`); return }
-    const T = id => f.titles[id] || { id, title: "Untitled" };
-    const top = Object.entries(f.ratings).sort((a, b) => b[1].stars - a[1].stars || b[1].at - a[1].at).slice(0, 12).map(([id]) => T(id));
-    app.innerHTML = `<h1>@${esc(name)}</h1>
-      <section class="sec"><div class="sec-h"><h2>Recently watched</h2></div>${grid(f.history.slice(0, 12).map(h => T(h.id)))}</section>
-      <section class="sec"><div class="sec-h"><h2>Top rated</h2></div>${grid(top)}</section>`;
+    const u=Store.me();if(!u)return needLogin();
+    app.innerHTML=skelGrid(6);
+    const f=await act(()=>Store.friendView(name));
+    if(!f){app.innerHTML=empty("Not on your list",`Add @${esc(name)} as a friend first. <a href="#/friends">Friends</a>`);return}
+    if(!f.mutual){app.innerHTML=`<h1>@${esc(name)}</h1>`+empty("Not shared yet",`@${esc(name)} hasn't added you back, so their diary is private for now.`);return}
+    const T=id=>f.titles[id]||{id,title:"Untitled"};
+    const history=[...f.history].sort((a,b)=>b.at-a.at);
+    const ratings=Object.entries(f.ratings).sort((a,b)=>b[1].at-a[1].at);
+    const watchlist=f.watchlist||[];
+    const reviews=Object.entries(f.reviews).sort((a,b)=>(b[1].at||0)-(a[1].at||0));
+    const tabs=[['watched',`Watched (${history.length})`],['ratings',`Ratings (${ratings.length})`],['reviews',`Reviews (${reviews.length})`],['watchlist',`Watchlist (${watchlist.length})`]];
+    app.innerHTML=`<h1>@${esc(name)}</h1><p class="muted">Movies and ratings imported from Letterboxd appear here alongside anything logged directly on StormReel.</p>
+      <div class="tabs" id="friendTabs">${tabs.map(([id,label],i)=>`<button class="btn ${i===0?'on':''}" data-friend-tab="${id}">${label}</button>`).join('')}</div>
+      <div id="friendLibrary"></div>`;
+    let active='watched',shown=60;
+    const render=()=>{
+      const host=$('#friendLibrary');if(!host)return;
+      let html='',total=0;
+      if(active==='watched'){
+        total=history.length;
+        html=history.slice(0,shown).map(h=>`<div class="li"><div class="grow"><a class="name" href="#/title/${encodeURIComponent(h.id)}">${esc(T(h.id).title)}</a><div class="muted" style="font-size:12px">Watched ${new Date(h.at).toLocaleDateString()}${f.ratings[h.id]?' · '+f.ratings[h.id].stars+' / 5':''}</div></div></div>`).join('');
+      }else if(active==='ratings'){
+        total=ratings.length;
+        html=ratings.slice(0,shown).map(([id,r])=>`<div class="li"><div class="grow"><a class="name" href="#/title/${encodeURIComponent(id)}">${esc(T(id).title)}</a><div class="muted" style="font-size:12px">${r.stars} / 5 stars</div></div></div>`).join('');
+      }else if(active==='reviews'){
+        total=reviews.length;
+        html=reviews.slice(0,shown).map(([id,r])=>`<div class="li"><div class="grow"><a class="name" href="#/title/${encodeURIComponent(id)}">${esc(T(id).title)}</a><p style="white-space:pre-wrap;overflow-wrap:anywhere;margin:5px 0">${esc(r.text||'')}</p></div></div>`).join('');
+      }else{
+        total=watchlist.length;
+        html=grid(watchlist.slice(0,shown).map(T));
+      }
+      host.innerHTML=(active==='watchlist'?html:`<div class="list">${html}</div>`)+(total>shown?`<button class="btn" id="friendMore" style="margin-top:18px">Show more (${total-shown} remaining)</button>`:'')+(!total?empty('Nothing here yet','No entries in this section.'):'');
+      const more=$('#friendMore');if(more)more.onclick=()=>{shown+=60;render()};
+    };
+    $('#friendTabs').querySelectorAll('[data-friend-tab]').forEach(b=>b.onclick=()=>{
+      active=b.dataset.friendTab;shown=60;
+      $('#friendTabs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));render();
+    });
+    render();
   },
 
   login(){
@@ -2320,6 +2552,15 @@ const Views = {
         <input class="f" id="key" value="${esc(LocalStore.settings().tmdbKey || "")}" placeholder="${CONFIG.tmdbKey ? "Using the site's shared key" : "Paste from themoviedb.org → Settings → API"}" autocomplete="off" spellcheck="false">
         <div class="row" style="margin-top:10px"><button class="btn primary" id="saveKey">Save key</button><button class="btn" id="clrKey">Clear</button></div>
 
+        ${u ? `<section id="lbImport" style="margin-top:30px;border-top:1px solid var(--line);padding-top:18px">
+          <div class="sec-h"><h2>Import from Letterboxd</h2><small>Movies, ratings and diary</small></div>
+          <p class="muted" style="font-size:14px">Bring your Letterboxd history into StormReel. Upload your full Letterboxd ZIP export, or select ratings.csv, watched.csv, diary.csv, reviews.csv and watchlist.csv together. Nothing is imported until you confirm the preview. Existing ratings and reviews are kept.</p>
+          <label for="lbFiles">Letterboxd export files</label><input class="f" id="lbFiles" type="file" accept=".zip,.csv,application/zip,text/csv" multiple>
+          <div class="row" style="margin-top:12px"><button class="btn primary" id="lbGo" disabled>Match and preview import</button></div>
+          <p id="lbStatus" class="muted" role="status" aria-live="polite" style="font-size:13px;margin:10px 0">Your example file is not included or imported.</p>
+          <p class="muted" style="font-size:12px">Requires TMDB access under Film data above. Letterboxd ratings use the same 0.5–5 scale as StormReel. Films with ambiguous matches are skipped. Ratings alone count as watched, but their dates may be rating dates rather than viewing dates.</p>
+        </section>` : ""}
+
         <div class="sec-h" style="margin-top:30px"><h2>Account</h2><small>${Store.mode === "cloud" ? "Synced to the cloud" : "Saved in this browser"}</small></div>
         ${u ? `<p style="margin-top:0">Signed in as <b>@${esc(u.username)}</b></p>
           <div class="row"><button class="btn" id="out">Sign out</button><button class="btn" id="exp">Download my data</button><label class="btn" style="margin:0;color:var(--text)">Import data<input type="file" id="imp" accept="application/json" hidden></label><button class="btn danger" id="del">Delete account</button></div>`
@@ -2334,6 +2575,7 @@ const Views = {
     };
     $("#clrKey").onclick = () => { LocalStore.setSetting("tmdbKey", ""); memCache.clear(); toast("Key cleared"); route() };
     if (!u) return;
+    LetterboxdImport.mount();
     $("#out").onclick = async () => { await act(() => Store.signOut(), "Signed out"); applyTheme(); location.hash = "#/" };
     $("#exp").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(Store.exportMine(), null, 2)], { type: "application/json" })); a.download = `stormreel-${u.username}.json`; a.click() };
     $("#imp").onchange = async e => { const f = e.target.files[0]; if (!f) return; let o; try { o = JSON.parse(await f.text()) } catch { return toast("That file couldn't be read.") } await act(() => Store.importMine(o), "Imported"); route() };
